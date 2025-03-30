@@ -1,0 +1,27 @@
+# node dependencies
+node_modules/
+client/node_modules/
+
+# environment variables
+.env
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS-specific stuff
+.DS_Store
+Thumbs.db
+
+# Optional: VSCode settings (only if you don't want them shared)
+.vscode/
+
+# Optional: build artifacts if you're building the frontend
+dist/
+build/
+
+# Optional: Firebase/cache/temp files
+.firebase/
+.cache/
+tmp/
