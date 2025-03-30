@@ -1,5 +1,5 @@
-import cloudinary from "../config/cloudinary";
-import User from "../models/User";
+import cloudinary from "../config/cloudinary.js";
+import User from "../models/User.js";
 
 export const updateProfile = async (req, res) => {
 	// image => cloudinary -> image.cloudinary.your => mongodb
