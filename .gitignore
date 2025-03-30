@@ -14,14 +14,14 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 
-# Optional: VSCode settings (only if you don't want them shared)
+# VSCode settings
 .vscode/
 
-# Optional: build artifacts if you're building the frontend
+# build artifacts
 dist/
 build/
 
-# Optional: Firebase/cache/temp files
+# Firebase/cache/temp files
 .firebase/
 .cache/
 tmp/
