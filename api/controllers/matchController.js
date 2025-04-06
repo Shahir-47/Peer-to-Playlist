@@ -14,16 +14,17 @@ export const swipeRight = async (req, res) => {
 		}
 
 		if (!currentUser.likes.includes(likedUserId)) {
-			currentUser.likes.push(likedUserId);
+			currentUser.likes.push(likedUserId); // add the liked user to the current user's likes array
 			await currentUser.save();
 
+			// if the liked user has already liked the current user, add them to each other's matches
 			if (likedUser.likes.includes(currentUser.id)) {
 				currentUser.matches.push(likedUserId);
 				likedUser.matches.push(currentUser.id);
 
 				//TODO: Send notification if it is a match => socket.io
 
-				//saves the matches at the same time
+				// saves the matches at the same time
 				await Promise.all([await currentUser.save(), await likedUser.save()]);
 			}
 		}
@@ -40,6 +41,7 @@ export const swipeRight = async (req, res) => {
 		});
 	}
 };
+
 export const swipeLeft = async (req, res) => {
 	try {
 		const dislikedUserId = req.params;
