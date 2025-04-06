@@ -1,4 +1,4 @@
-import User from "../models/User";
+import User from "../models/User.js";
 
 export const swipeRight = async (req, res) => {
 	try {
@@ -28,6 +28,7 @@ export const swipeRight = async (req, res) => {
 				await Promise.all([await currentUser.save(), await likedUser.save()]);
 			}
 		}
+
 		res.status(200).json({
 			success: true,
 			user: currentUser,
