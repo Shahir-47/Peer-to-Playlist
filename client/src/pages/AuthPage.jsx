@@ -13,7 +13,7 @@ const AuthPage = () => {
 					{isLogin ? "Sign in to Swipe" : "Create a swipe account"}
 				</h2>
 
-				<div className="bg-white shadow-xl rounded-lg pb-8">
+				<div className="bg-white shadow-xl rounded-lg p-8">
 					{/* if on login page, show LoginForm, else show SignUpForm */}
 					{isLogin ? <LoginForm /> : <SignUpForm />}
 
@@ -23,7 +23,7 @@ const AuthPage = () => {
 							{isLogin ? "New to Swipe?" : "Already have an account?"}
 						</p>
 						<button
-							className="mt-2 text-red-600 hover:text-red-800 font-medium transition-colors duration-300"
+							className="mt-2 text-red-600 hover:text-red-800 font-medium transition-colors duration-300 cursor-pointer"
 							// if user is on the login page, set is login to false so that the signup form is shown when the button is clicked,
 							// else if user is on the signup page, set is login to true so that the login form is shown when the button is clicked
 							onClick={() => setIsLogin((prevIsLogin) => !prevIsLogin)}
