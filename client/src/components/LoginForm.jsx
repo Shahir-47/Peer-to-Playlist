@@ -1,13 +1,21 @@
 import { useState } from "react";
+import { useAuthStore } from "../store/useAuthStore"; // import the auth store file to use the login function and loading state
 
 const LoginForm = () => {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 
-	const loading = false;
+	const { login, loading } = useAuthStore(); // get login function and loading state from the auth store file
 
 	return (
-		<form className="space-y-6">
+		<form
+			className="space-y-6"
+			onSubmit={(e) => {
+				e.preventDefault(); // Stops page reload so we can handle form submission with JavaScript
+				login({ email, password }); // Call the login function from the auth store with the form data
+				// The login function will handle the API call and update the loading state
+			}}
+		>
 			{/* Email input field */}
 			<div>
 				<label

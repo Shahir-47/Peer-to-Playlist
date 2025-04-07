@@ -24,6 +24,21 @@ export const useAuthStore = create((set) => ({
 		}
 	},
 
+	login: async (loginData) => {
+		try {
+			set({ loading: true }); // Set loading to true when starting the login process
+			const res = await axiosInstance.post("/auth/login", loginData); // Sends a POST request to the backend to log in the user
+			console.log(res.data);
+			set({ authUser: res.data.user }); // If successful, update authUser with the user's data and set loading to false
+
+			toast.success("Logged in successfully!"); // Show success message
+		} catch (error) {
+			toast.error(error.response.data.message || "Something went wrong!"); // Show error message
+		} finally {
+			set({ loading: false }); // Set loading to false when the login process is complete
+		}
+	},
+
 	logout: async () => {
 		try {
 			const res = await axiosInstance.post("/auth/logout"); // Sends a POST request to the backend to log out the user
