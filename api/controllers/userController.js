@@ -17,7 +17,8 @@ export const updateProfile = async (req, res) => {
 					updatedData.image = uploadResponse.secure_url;
 				} catch (error) {
 					console.error("Error uploading image:", uploadError);
-					req.status(400).json({
+
+					return res.status(400).json({
 						success: false,
 						message: "Error uploading image",
 					});
@@ -25,17 +26,17 @@ export const updateProfile = async (req, res) => {
 			}
 		}
 
-		const updatedUser = await User.findByIdAndUpdate(req.user.id, updateData, {
+		const updatedUser = await User.findByIdAndUpdate(req.user.id, updatedData, {
 			new: true,
 		});
 
-		req.status(200).json({
+		res.status(200).json({
 			success: true,
 			user: updatedUser,
 		});
 	} catch (error) {
 		console.log("Error in updateProfile: ", error);
-		req.status(500).json({
+		res.status(500).json({
 			success: false,
 			message: "Internal server error",
 		});

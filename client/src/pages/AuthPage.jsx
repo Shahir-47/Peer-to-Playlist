@@ -9,8 +9,10 @@ const AuthPage = () => {
 		<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-500 to-pink-500 p-4">
 			<div className="w-full max-w-md">
 				<h2 className="text-center text-3xl font-extrabold text-white mb-8">
-					{/* if on login page, show "Sign in to Swipe", else show "Create a swipe account" */}
-					{isLogin ? "Sign in to Swipe" : "Create a swipe account"}
+					{/* if on login page, show "Sign in to Peer To Playlist", else show "Create a Peer To Playlist account" */}
+					{isLogin
+						? "Sign in to Peer To Playlist"
+						: "Create a Peer To Playlist account"}
 				</h2>
 
 				<div className="bg-white shadow-xl rounded-lg p-8">
@@ -19,8 +21,10 @@ const AuthPage = () => {
 
 					<div className="mt-8 text-center">
 						<p className="text-sm text-gray-600">
-							{/* if on login page, show "New to Swipe?", else show "Already have an account?" */}
-							{isLogin ? "New to Swipe?" : "Already have an account?"}
+							{/* if on login page, show "New to Peer To Playlist?", else show "Already have an account?" */}
+							{isLogin
+								? "New to Peer To Playlist?"
+								: "Already have an account?"}
 						</p>
 						<button
 							className="mt-2 text-red-600 hover:text-red-800 font-medium transition-colors duration-300 cursor-pointer"

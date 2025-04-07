@@ -21,7 +21,7 @@ export const protectedRoute = async (req, res, next) => {
 			});
 		}
 
-		const currentUser = await User.findById(decode.id);
+		const currentUser = await User.findById(decoded.id);
 
 		req.user = currentUser;
 

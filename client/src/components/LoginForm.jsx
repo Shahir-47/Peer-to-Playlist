@@ -1,13 +1,23 @@
 import { useState } from "react";
+import { useAuthStore } from "../store/useAuthStore"; // import the auth store file to use the login function and loading state
+import { Eye, EyeOff } from "lucide-react"; // for toggle icon
 
 const LoginForm = () => {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
+	const [showPassword, setShowPassword] = useState(false); // toggle password visibility
 
-	const loading = false;
+	const { login, loading } = useAuthStore(); // get login function and loading state from the auth store file
 
 	return (
-		<form className="space-y-6">
+		<form
+			className="space-y-6"
+			onSubmit={(e) => {
+				e.preventDefault(); // Stops page reload so we can handle form submission with JavaScript
+				login({ email, password }); // Call the login function from the auth store with the form data
+				// The login function will handle the API call and update the loading state
+			}}
+		>
 			{/* Email input field */}
 			<div>
 				<label
@@ -38,17 +48,23 @@ const LoginForm = () => {
 				>
 					Password
 				</label>
-				<div className="mt-1">
+				<div className="mt-1 relative">
 					<input
 						id="password"
 						name="password"
-						type="password"
+						type={showPassword ? "text" : "password"}
 						autoComplete="current-password"
 						required
 						value={password}
 						onChange={(e) => setPassword(e.target.value)}
 						className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm"
 					/>
+					<div
+						onClick={() => setShowPassword(!showPassword)}
+						className="absolute inset-y-0 right-0 flex items-center px-3 cursor-pointer hover:text-pink-500 transition-colors duration-200"
+					>
+						{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+					</div>
 				</div>
 			</div>
 
