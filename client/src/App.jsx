@@ -64,7 +64,7 @@ function App() {
 					element={authUser ? <ProfilePage /> : <Navigate to={"/"} />}
 				/>
 				<Route
-					// :id is a dynamic route segment — it matches anything in that position (e.g. /chat/123)
+					// :id is a dynamic URL segment (example: /chat/123)
 					path="/chat/:id"
 					// If the user is authenticated, show the chat page
 					// Else, redirect to the auth page
