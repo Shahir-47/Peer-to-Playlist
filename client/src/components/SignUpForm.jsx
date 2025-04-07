@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuthStore } from "../store/useAuthStore";
 
 const SignUpForm = () => {
 	const [name, setName] = useState("");
@@ -8,18 +9,15 @@ const SignUpForm = () => {
 	const [age, setAge] = useState("");
 	const [genderPreference, setGenderPreference] = useState("");
 
-	const loading = false; // This would typically be a state variable that tracks if the form is submitting
-
-	const signup = () => {
-		alert("Signup");
-	};
+	const { signup, loading } = useAuthStore(); // get signup function and loading state from the auth store file
 
 	return (
 		<form
 			className="space-y-6"
 			onSubmit={(e) => {
 				e.preventDefault(); // Stops page reload so we can handle form submission with JavaScript
-				signup({ name, email, password, gender, age, genderPreference });
+				signup({ name, email, password, gender, age, genderPreference }); // Call the signup function from the auth store with the form data
+				// The signup function will handle the API call and update the loading state
 			}}
 		>
 			{/* NAME */}
@@ -216,7 +214,7 @@ const SignUpForm = () => {
 						// if loading is true, show loading styles, else show normal styles
 						loading
 							? "bg-pink-400 cursor-not-allowed"
-							: "bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+							: "bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 cursor-pointer"
 					}`}
 					disabled={loading} // disable the button if loading is true
 				>
