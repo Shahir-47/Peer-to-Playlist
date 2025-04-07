@@ -13,6 +13,7 @@ import messageRoutes from "./routes/messageRoutes.js";
 
 // database connection
 import { connectDB } from "./config/db.js";
+import { initializeSocket } from "./socket/socket.server.js";
 
 dotenv.config();
 

@@ -1,4 +1,6 @@
+import { isObjectIdOrHexString } from "mongoose";
 import User from "../models/User.js";
+import { getConnectedUsers, getIO } from "../socket/socket.server.js";
 
 export const swipeRight = async (req, res) => {
 	try {
@@ -22,10 +24,31 @@ export const swipeRight = async (req, res) => {
 				currentUser.matches.push(likedUserId);
 				likedUser.matches.push(currentUser.id);
 
-				//TODO: Send notification if it is a match => socket.io
-
 				// saves the matches at the same time
 				await Promise.all([await currentUser.save(), await likedUser.save()]);
+
+				//send notif to other user then to us in real time with socket.io
+
+				const connectedUsers = getConnectedUsers();
+				const io = getIO();
+
+				const likedUserSocketId = connectedUsers.get(likedUserId);
+
+				if(likedUserSocketId){
+					io.to(likedUserSocketId).emit("newMatch", {
+						_id: currentUser._id,
+						name: currentUser.name,
+						image: currentUser.image,
+					});
+				}
+				const currentSocketId = connectedUsers.get(currentUser._id.toString());
+				if (currentSocketId) {
+					io.to(currentSocketId).emit("newMatch", {
+						_id: likedUser._id,
+						name: likedUser.name,
+						image: likedUser.image,
+					});
+				}
 			}
 		}
 

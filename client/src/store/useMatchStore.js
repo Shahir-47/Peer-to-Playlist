@@ -58,4 +58,32 @@ export const useMatchStore = create((set) => ({
 			setTimeout(() => set({ swipeFeedback: null }), 1500); // show 'liked' message for 1.5 sec
 		}
 	},
+
+	//listen for new matches
+	subscribeToNewMatches: () => {
+		try {
+			const socket = getSocket();
+
+			//listening for events from backend called newMatch
+			socket.on("newMatch", (newMatch) => {
+				set((state) => ({
+						 matches: [...state.matches, newMatch],
+				}));
+				//notification
+				toast.success("You got a new match!");
+			});
+		} catch (error) {
+			console.log(error);
+		}
+	},
+
+	//when we log out, we no longer listen for new matches
+	unsubscribeFromNewMatches: () => {
+		try {
+			const socket = getSocket();
+			socket.off("newMatch");
+		} catch (error) {
+			console.log(error);
+		}
+	}
 }));

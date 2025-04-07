@@ -1,6 +1,7 @@
 import { create } from "zustand"; // Allows us to create a global state so we can share data across components
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
+import { disconnectSocket, initializeSocket } from "../socket/socket.client";
 
 export const useAuthStore = create((set) => ({
 	// ^ set is a function that updates the states (authUser, checkingAuth, loading) in this function
@@ -15,7 +16,7 @@ export const useAuthStore = create((set) => ({
 			const res = await axiosInstance.post("/auth/signup", signupData); // Sends a POST request to the backend to create a new user
 			console.log(res.data);
 			set({ authUser: res.data.user }); // If successful, update authUser with the new user's data and set loading to false
-
+			initializeSocket(res.data.user_id);
 			toast.success("Account created successfully!"); // Show success message
 		} catch (error) {
 			toast.error(error.response.data.message || "Something went wrong!"); // Show error message
@@ -30,7 +31,7 @@ export const useAuthStore = create((set) => ({
 			const res = await axiosInstance.post("/auth/login", loginData); // Sends a POST request to the backend to log in the user
 			console.log(res.data);
 			set({ authUser: res.data.user }); // If successful, update authUser with the user's data and set loading to false
-
+			initializeSocket(res.data.user_id);
 			toast.success("Logged in successfully!"); // Show success message
 		} catch (error) {
 			toast.error(error.response.data.message || "Something went wrong!"); // Show error message
@@ -42,7 +43,7 @@ export const useAuthStore = create((set) => ({
 	logout: async () => {
 		try {
 			const res = await axiosInstance.post("/auth/logout"); // Sends a POST request to the backend to log out the user
-
+			disconnectSocket();
 			if (res.status === 200) set({ authUser: null }); // If successful, set authUser to null
 		} catch (error) {
 			toast.error(error.response.data.message || "Something went wrong!"); // Show error message
@@ -69,6 +70,7 @@ export const useAuthStore = create((set) => ({
 			*/
 
 			const res = await axiosInstance.get("/auth/me");
+			initializeSocket(res.data.user_id);
 			set({ authUser: res.data.user }); // If successful, update authUser with the user's data
 		} catch (error) {
 			set({ authUser: null }); // If there's an error, set authUser to null

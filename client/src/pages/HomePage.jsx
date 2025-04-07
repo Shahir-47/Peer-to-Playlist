@@ -5,17 +5,25 @@ import SwipeArea from "../components/SwipeArea";
 import SwipeFeedback from "../components/SwipeFeedback";
 import { useMatchStore } from "../store/useMatchStore";
 import { Frown } from "lucide-react";
+import { useAuthStore } from "../store/useAuthStore";
 
 const HomePage = () => {
-	const { isLoadingUserProfiles, getUserProfiles, userProfiles } =
+	const { isLoadingUserProfiles, getUserProfiles, userProfiles, subscribeToNewMatches, unsubscribeFromNewMatches } =
 		useMatchStore();
+
+	const {authUser} = useAuthStore();
 
 	// Once the component mounts, get all other users
 	useEffect(() => {
 		getUserProfiles();
 	}, [getUserProfiles]);
 
-	console.log("User Profiles: ", userProfiles);
+	useEffect(() => {
+		authUser && subscribeToNewMatches();
+		return () => {
+			unsubscribeFromNewMatches();
+		};
+	}, [subscribeToNewMatches, unsubscribeFromNewMatches, authUser]);
 
 	return (
 		<div className="flex flex-col lg:flex-row min-h-screen bg-gradient-to-br from-pink-100 to-purple-100 overflow-hidden">
