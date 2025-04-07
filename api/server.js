@@ -20,6 +20,9 @@ const PORT = process.env.PORT || 5000;
 app.use(express.json());
 app.use(cookieParser());
 app.use(
+	// Enable CORS to allow requests from the frontend domain
+	// CORS is a security feature that allows or restricts resources to be requested from another domain
+	// 'credentials: true' allows cookies to be sent with requests
 	cors({
 		origin: "http://localhost:5173",
 		credentials: true,
