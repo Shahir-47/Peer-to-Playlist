@@ -8,7 +8,7 @@ const Sidebar = () => {
 
 	const toggleSidebar = () => setIsOpen(!isOpen);
 
-	const { getMyMatches, matches, loading } = useMatchStore();
+	const { getMyMatches, matches, isLoadingMyMatches } = useMatchStore();
 
 	// Once the component mounts, get all matches
 	useEffect(() => {
@@ -41,7 +41,7 @@ const Sidebar = () => {
 						{/* If loading, then show loading animation. If done loading, then:
                         No matches => show No Matches UI, else show Matches
                     */}
-						{loading ? (
+						{isLoadingMyMatches ? (
 							<LoadingState />
 						) : matches.length === 0 ? (
 							<NoMatchesFound />
