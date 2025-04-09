@@ -48,7 +48,19 @@ const MessageInput = ({ match }) => {
 			</button>
 
             {/* here for file input */}
-            
+            <input 
+                type="file" 
+                id="file-selector" 
+                multiple
+            />
+{/* <script>
+  const fileSelector = document.getElementById('file-selector');
+  fileSelector.addEventListener('change', (event) => {
+    const fileList = event.target.files;
+    console.log(fileList);
+  });
+</script> */}
+
 			<input
 				type='text'
 				value={message}
