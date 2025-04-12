@@ -21,7 +21,7 @@ const app = express();
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 5000;
 
-initializeSocket(httpServer)
+initializeSocket(httpServer);
 
 app.use(express.json());
 app.use(cookieParser());
@@ -30,7 +30,7 @@ app.use(
 	// CORS is a security feature that allows or restricts resources to be requested from another domain
 	// 'credentials: true' allows cookies to be sent with requests
 	cors({
-		origin: "http://localhost:5173",
+		origin: process.env.CLIENT_URL,
 		credentials: true,
 	})
 );

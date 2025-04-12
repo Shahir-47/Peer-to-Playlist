@@ -1,4 +1,4 @@
-import { Server } from 'socket.io';
+import { Server } from "socket.io";
 
 let io;
 
@@ -6,36 +6,34 @@ const connectedUsers = new Map();
 
 //creates socket server
 export const initializeSocket = (httpServer) => {
+	io = new Server(httpServer, {
+		cors: {
+			origin: process.env.CLIENT_URL,
+			credentials: true,
+		},
+	});
 
-    io = new Server(httpServer, {
-        cors:{
-            origin: process.env.CLIENT_URL,
-            credentials: true
-        },
-    });
+	//adds authentication
+	io.use((socket, next) => {
+		const userId = socket.handshake.auth.userId;
+		if (!userId) return next(new Error("Invalid user ID"));
 
-    //adds authentication
-    io.use((socket, next) => {
-        const userId = socket.handshake.auth.userId;
-        if (!userId) return next(new Error("Invalid user ID"));
+		socket.userId - userId;
+		next();
+	});
 
-        socket.userId - userId
-        next()
-    });
+	//listening for the incoming connections
+	//if connection, update map
+	//if disconnect, remove from map
+	io.on("connection", (socket) => {
+		console.log(`User connected with socket id: ${socket.id}`);
+		connectedUsers.set(socket.userId, socket.id);
 
-    //listening for the incoming connections
-    //if connection, update map
-    //if disconnect, remove from map
-    io.on("connection", (socket) => {
-        console.log("User connected with socket id: ${socket.id}");
-        connectedUsers.set(socket.userId, socket.id);
-
-        socket.on("disconnect", () => {
-            console.log("User disconnected with socket id: ${socket.id}");
-            connectedUsers.delete(socket.userId);
-        });
-    });
-
+		socket.on("disconnect", () => {
+			console.log(`User disconnected with socket id: ${socket.id}`);
+			connectedUsers.delete(socket.userId);
+		});
+	});
 };
 
 //return the io
