@@ -3,6 +3,7 @@ import dotenv from "dotenv"; // To load environment variables from a .env file
 import cookieParser from "cookie-parser"; // To parse cookies from the request
 import { createServer } from "http"; // To create an HTTP server
 import cors from "cors"; // To enable CORS (Cross-Origin Resource Sharing) for the API
+import path from "path"; // To handle file and directory paths
 
 // Import route handlers for different parts of the API
 import authRoutes from "./routes/authRoutes.js";
@@ -25,6 +26,8 @@ const app = express(); // Create an Express application
 // Express is built on top of this server, so all Express logic runs here.
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 5000;
+
+const _dirname = path.resolve(); // Get the current directory path
 
 // Initialize the Socket.IO server and attach it to the HTTP server.
 // This sets up a real-time communication channel alongside our Express API.
@@ -51,6 +54,17 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/matches", matchRoutes);
 app.use("/api/messages", messageRoutes);
+
+// Serve static files from the React app in production mode.
+// When the app is built, the static files are in the 'client/build' directory.
+// Any request that doesn't match the API routes will be handled by the React app.
+// This is useful for deploying the app, as it allows the server to serve the front-end files directly.
+if (process.env.NODE_ENV === "production") {
+	app.use(express.static(path.join(_dirname, "/client/build"))); // Serve static files from the React app
+	app.get("*", (req, res) => {
+		res.sendFile(path.join(_dirname, "client", "dist", "index.html")); // Serve the React app for any other route
+	});
+}
 
 // Start the server and listen for incoming requests on the specified port.
 httpServer.listen(PORT, () => {

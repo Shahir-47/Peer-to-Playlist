@@ -1,7 +1,8 @@
 import io from "socket.io-client";
 
+// Set the socket URL based on the environment
 const SOCKET_URL =
-	import.meta.env.MODE === "development" ? "http://localhost:5000" : "/";
+	import.meta.env.MODE === "development" ? "http://localhost:5000/api" : "/api";
 
 let socket = null;
 
