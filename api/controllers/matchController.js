@@ -5,9 +5,12 @@ import { getConnectedUsers, getIO } from "../socket/socket.server.js";
 export const swipeRight = async (req, res) => {
 	try {
 		const { likedUserId } = req.params;
+
+		// Get current and liked user from the DB
 		const currentUser = await User.findById(req.user.id);
 		const likedUser = await User.findById(likedUserId);
 
+		// If liked user doesn't exist, send error
 		if (!likedUser) {
 			return res.status(404).json({
 				success: false,
@@ -15,32 +18,34 @@ export const swipeRight = async (req, res) => {
 			});
 		}
 
+		// If user hasn't already liked this person
 		if (!currentUser.likes.includes(likedUserId)) {
-			currentUser.likes.push(likedUserId); // add the liked user to the current user's likes array
+			currentUser.likes.push(likedUserId); // add the liked user to the current user's likes array field
 			await currentUser.save();
 
-			// if the liked user has already liked the current user, add them to each other's matches
+			// Check if it's a match (i.e., they liked each other)
 			if (likedUser.likes.includes(currentUser.id)) {
-				currentUser.matches.push(likedUserId);
+				currentUser.matches.push(likedUserId); // add the current user to the liked user's matches array field
 				likedUser.matches.push(currentUser.id);
 
-				// saves the matches at the same time
+				// Save both users in parallel
 				await Promise.all([await currentUser.save(), await likedUser.save()]);
 
-				//send notif to other user then to us in real time with socket.io
-
+				// Send real-time match notifications using Socket.IO
 				const connectedUsers = getConnectedUsers();
 				const io = getIO();
 
+				// Notify the liked user (if they're online)
 				const likedUserSocketId = connectedUsers.get(likedUserId);
-
-				if(likedUserSocketId){
+				if (likedUserSocketId) {
 					io.to(likedUserSocketId).emit("newMatch", {
 						_id: currentUser._id,
 						name: currentUser.name,
 						image: currentUser.image,
 					});
 				}
+
+				// Notify the current user (if they're online)
 				const currentSocketId = connectedUsers.get(currentUser._id.toString());
 				if (currentSocketId) {
 					io.to(currentSocketId).emit("newMatch", {
@@ -71,6 +76,7 @@ export const swipeLeft = async (req, res) => {
 		const { dislikedUserId } = req.params;
 		const currentUser = await User.findById(req.user.id);
 
+		// If not already disliked, add to dislikes list
 		if (!currentUser.dislikes.includes(dislikedUserId)) {
 			currentUser.dislikes.push(dislikedUserId);
 			await currentUser.save();
@@ -93,7 +99,7 @@ export const swipeLeft = async (req, res) => {
 export const getMatches = async (req, res) => {
 	try {
 		// Get the current user's document from the database using their ID.
-		// The 'matches' field contains references (ObjectIds) to other user documents — similar to foreign keys in SQL.
+		// The 'matches' field contains references (ObjectIds) to other users document — similar to foreign keys in SQL.
 		// Using populate(), we replace those ObjectIds with the actual user data they point to,
 		// selecting only each matched user's 'name' and 'image' (plus '_id', which is included by default).
 		// In the end, 'user.matches' will be an array of user objects with: { _id, name, image }.

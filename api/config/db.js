@@ -1,5 +1,6 @@
 import mangoose from "mongoose";
 
+// This function connects to the MongoDB database
 export const connectDB = async () => {
 	try {
 		const conn = await mangoose.connect(process.env.MONGO_URI);

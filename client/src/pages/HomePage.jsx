@@ -1,23 +1,42 @@
 import { useEffect } from "react";
+
+// App components
 import Sidebar from "../components/Sidebar";
 import { Header } from "../components/Header";
 import SwipeArea from "../components/SwipeArea";
 import SwipeFeedback from "../components/SwipeFeedback";
+
+// Global state stores
 import { useMatchStore } from "../store/useMatchStore";
-import { Frown } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 
+// Icon
+import { Frown } from "lucide-react";
+
 const HomePage = () => {
-	const { isLoadingUserProfiles, getUserProfiles, userProfiles, subscribeToNewMatches, unsubscribeFromNewMatches } =
-		useMatchStore();
+	const {
+		isLoadingUserProfiles,
+		getUserProfiles,
+		userProfiles,
+		subscribeToNewMatches,
+		unsubscribeFromNewMatches,
+	} = useMatchStore();
 
-	const {authUser} = useAuthStore();
+	const { authUser } = useAuthStore();
 
-	// Once the component mounts, get all other users
+	/**
+	 * Fetch user profiles (potential matches) when the component first mounts.
+	 * This ensures the swipe deck is filled as soon as the page loads.
+	 */
 	useEffect(() => {
 		getUserProfiles();
 	}, [getUserProfiles]);
 
+	/**
+	 * Subscribe to real-time "newMatch" events via WebSocket
+	 * Only sets up subscription if the user is authenticated.
+	 * Automatically unsubscribes when component unmount or when the user logs out.
+	 */
 	useEffect(() => {
 		authUser && subscribeToNewMatches();
 		return () => {

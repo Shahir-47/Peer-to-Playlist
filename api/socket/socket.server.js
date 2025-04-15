@@ -4,22 +4,29 @@ let io;
 
 const connectedUsers = new Map();
 
-//creates socket server
+/**
+ * Initializes and configures the Socket.IO server.
+ * This must be called once with the Express HTTP server.
+ * @param {http.Server} httpServer - The same HTTP server used by Express
+ */
 export const initializeSocket = (httpServer) => {
+	// Attach Socket.IO to the same server Express uses
+	// This allows us to use the same server for both HTTP and WebSocket connections
 	io = new Server(httpServer, {
 		cors: {
-			origin: process.env.CLIENT_URL,
-			credentials: true,
+			origin: process.env.CLIENT_URL, // Only allow connections from the frontend URL
+			credentials: true, // Allow credentials (cookies, authorization headers, etc.)
 		},
 	});
 
-	//adds authentication
+	// Middleware: Run before the socket connection is finalized
 	io.use((socket, next) => {
-		const userId = socket.handshake.auth.userId;
+		const userId = socket.handshake.auth.userId; // Get userId from client-provided auth data
 		if (!userId) return next(new Error("Invalid user ID"));
 
-		socket.userId - userId;
-		next();
+		// Attach the userId to the socket object for later use
+		socket.userId = userId;
+		next(); // Allow the connection to proceed
 	});
 
 	//listening for the incoming connections

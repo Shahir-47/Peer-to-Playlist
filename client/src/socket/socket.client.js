@@ -1,11 +1,14 @@
 import io from "socket.io-client";
 
-const SOCKET_URL = import.meta.env.MODE === "development" ? "http://localhost:5000" : "/";
+const SOCKET_URL =
+	import.meta.env.MODE === "development" ? "http://localhost:5000" : "/";
 
 let socket = null;
 
+// Initialize the socket connection with the server
+// This function will be called when the user logs in or signs up
 export const initializeSocket = (userId) => {
-    //we don't want multiple sockets from one client
+	// we don't want multiple sockets from one client
 	if (socket) {
 		socket.disconnect();
 	}

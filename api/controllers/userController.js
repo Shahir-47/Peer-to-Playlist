@@ -9,6 +9,7 @@ export const updateProfile = async (req, res) => {
 
 		let updatedData = otherData;
 
+		// add image to cloudinary so we can store the image URL in MongoDB
 		if (image) {
 			// base64 format
 			if (image.startsWith("data:image")) {
@@ -26,6 +27,7 @@ export const updateProfile = async (req, res) => {
 			}
 		}
 
+		// Update the user in the database
 		const updatedUser = await User.findByIdAndUpdate(req.user.id, updatedData, {
 			new: true,
 		});
