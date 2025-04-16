@@ -1,15 +1,27 @@
+import cloudinary from "../config/cloudinary.js";
 import Message from "../models/Message.js";
 import { getConnectedUsers, getIO } from "../socket/socket.server.js";
 
 export const sendMessage = async (req, res) => {
 	try {
-		const { content, receiverId } = req.body;
+		const { content, receiverId, file, fileType } = req.body;
+
+		let fileUrl = null;
+		if (file) {
+			// If a file is provided in base64 format, upload it to Cloudinary
+			if (file && file.startsWith("data:")) {
+				const uploadResponse = await cloudinary.uploader.upload(file);
+				fileUrl = uploadResponse.secure_url;
+			}
+		}
 
 		// Create a new message in the DB with sender, receiver, and content
 		const newMessage = await Message.create({
 			sender: req.user.id,
 			receiver: receiverId,
 			content,
+			fileUrl,
+			fileType: fileUrl ? fileType : "",
 		});
 
 		// Get Socket.IO instance and connected users map

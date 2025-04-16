@@ -19,7 +19,19 @@ const messageSchema = new mongoose.Schema(
 		},
 		content: {
 			type: String, //we change to mp3
-			required: true,
+			required: function () {
+				// Require content if fileUrl is not provided
+				return !this.fileUrl;
+			},
+		},
+		fileUrl: {
+			type: String, // URL of the file sent (if any)
+			default: "",
+		},
+		fileType: {
+			type: String,
+			enum: ["image", "audio", "video", "pdf", "document"],
+			default: "",
 		},
 	},
 	{ timestamps: true } // This option automatically adds createdAt and updatedAt fields to the schema.

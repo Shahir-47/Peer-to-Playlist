@@ -8,7 +8,7 @@ export const useMessageStore = create((set) => ({
 	messages: [], // List of all messages in the current conversation
 	loading: true, // Tracks loading state while fetching messages
 
-	sendMessage: async (receiverId, content) => {
+	sendMessage: async (receiverId, content, file, fileType) => {
 		try {
 			// show message in chat
 			set((state) => ({
@@ -18,6 +18,8 @@ export const useMessageStore = create((set) => ({
 						_id: Date.now(),
 						sender: useAuthStore.getState().authUser._id,
 						content,
+						fileUrl: file,
+						fileType,
 					},
 				],
 			}));
@@ -26,6 +28,8 @@ export const useMessageStore = create((set) => ({
 			const res = await axiosInstance.post("/messages/send", {
 				receiverId,
 				content,
+				file,
+				fileType,
 			});
 			console.log("message sent", res.data);
 		} catch (error) {

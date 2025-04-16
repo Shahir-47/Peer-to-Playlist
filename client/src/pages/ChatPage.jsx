@@ -6,6 +6,7 @@ import { useMessageStore } from "../store/useMessageStore";
 import { Link, useParams } from "react-router-dom";
 import { Loader, UserX } from "lucide-react";
 import MessageInput from "../components/MessageInput";
+import FileAttachment from "../components/FileAttachment";
 
 const ChatPage = () => {
 	const { getMyMatches, matches, isLoadingMyMatches } = useMatchStore();
@@ -85,7 +86,15 @@ const ChatPage = () => {
 											: "bg-gray-200 text-gray-800"
 									}`}
 								>
-									{msg.content}
+									{msg.fileUrl && (
+										<div className="mb-2">
+											<FileAttachment
+												fileUrl={msg.fileUrl}
+												fileType={msg.fileType}
+											/>
+										</div>
+									)}
+									{msg.content && <div>{msg.content}</div>}
 								</span>
 							</div>
 						))
