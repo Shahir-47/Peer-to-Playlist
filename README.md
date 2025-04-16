@@ -3,6 +3,7 @@
 ## Peer-To-Playlist
 
 ## Shahir Ahmed and Megan Triplett
+More details in our [technical report](https://github.com/Shahir-47/Peer-to-Playlist/blob/development/Shahir%20and%20Megan%20Technical%20Report.pdf).
 
 ## Running Client Side on the Web:
 
