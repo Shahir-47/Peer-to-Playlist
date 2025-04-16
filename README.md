@@ -11,24 +11,26 @@ The live deployment of our application:
 https://peer-to-playlist.onrender.com/auth  
 
 ## Installing Locally
-in the ./Peer-to-Playlist directory run:
+in the `./Peer-to-Playlist` directory run:
 
+```bash
 npm install  
 
 npm run dev 
-
-In another terminal, run in the ./Peer-to-Playlist/client directory 
-
+```
+In another terminal, run in the `./Peer-to-Playlist/client` directory 
+```bash
 npm install 
 
 npm run dev 
-
+```
 ## Initializing the Database
-Create an account and a database at mongodb.com and put the url into the .env file below
+Create an account and a database at [MongoDb](mongodb.com) and put the url into the .env file below
 Similarly, do the same for Cloudinary, with the addition of the API Key and the API Secret.
 
 ## Setting up the .env file
 
+```bash
 PORT=5000
 
 MONGO_URI=\<your_mongo_uri>
@@ -44,13 +46,13 @@ CLOUDINARY_API_KEY=\<your_cloudinary_api_key>
 CLOUDINARY_API_SECRET=\<your_cloudinary_api_secret>
 
 CLOUDINARY_CLOUD_NAME=\<your_cloudinary_cloud_name>
-
+```
 ## File directory
 
 Directory structure:
 
+```
 └── \<your name>-peer-to-playlist/
-
     ├── README.md
     ├── LICENSE
     ├── package.json
@@ -78,7 +80,7 @@ Directory structure:
     │   │   └── user.js
     │   └── socket/
     │       └── socket.server.js
-    └── client/
+    └── client/  
         ├── README.md
         ├── eslint.config.js
         ├── index.html
@@ -116,3 +118,4 @@ Directory structure:
                 ├── useMessageStore.js
                 └── useUserStore.js
 
+```
