@@ -31,7 +31,6 @@ const messageSchema = new mongoose.Schema(
 		fileType: {
 			type: String,
 			enum: ["image", "audio", "video", "pdf", "document"],
-			default: "",
 		},
 	},
 	{ timestamps: true } // This option automatically adds createdAt and updatedAt fields to the schema.

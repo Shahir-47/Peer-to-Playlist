@@ -21,7 +21,7 @@ export const sendMessage = async (req, res) => {
 			receiver: receiverId,
 			content,
 			fileUrl,
-			fileType: fileUrl ? fileType : "",
+			fileType: fileUrl ? fileType : undefined,
 		});
 
 		// Get Socket.IO instance and connected users map
