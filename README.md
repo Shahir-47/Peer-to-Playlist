@@ -31,7 +31,7 @@ Similarly, do the same for Cloudinary, with the addition of the API Key and the 
 
 ## Setting up the .env file
 
-```bash
+```
 PORT=5000
 
 MONGO_URI=\<your_mongo_uri>
