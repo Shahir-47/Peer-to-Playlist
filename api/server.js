@@ -60,7 +60,7 @@ app.use("/api/messages", messageRoutes);
 // Any request that doesn't match the API routes will be handled by the React app.
 // This is useful for deploying the app, as it allows the server to serve the front-end files directly.
 if (process.env.NODE_ENV === "production") {
-	app.use(express.static(path.join(_dirname, "/client/build"))); // Serve static files from the React app
+	app.use(express.static(path.join(_dirname, "/client/dist"))); // Serve static files from the React app
 	app.get("*", (req, res) => {
 		res.sendFile(path.join(_dirname, "client", "dist", "index.html")); // Serve the React app for any other route
 	});
