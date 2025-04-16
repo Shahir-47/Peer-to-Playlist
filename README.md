@@ -6,7 +6,7 @@
 
 ## Running Client Side on the Web:
 
-The application can be executed on the client side by following our deploy link:  
+The live deployment of our application:  
 
 https://peer-to-playlist.onrender.com/auth  
 
