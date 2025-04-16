@@ -35,10 +35,13 @@ const _dirname = path.resolve(); // Get the current directory path
 initializeSocket(httpServer);
 
 // express.json(): Parses incoming JSON payloads to make them available on req.body.
-app.use(express.json());
+app.use(express.json({ limit: "10mb" })); // Limit the size of incoming JSON payloads to 10MB
 
 // cookieParser(): Parses cookies attached to the client request, making them accessible via req.cookies.
 app.use(cookieParser());
+
+// express.urlencoded(): Parses incoming requests with URL-encoded payloads
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 // This allows the front-end (which might be hosted on a different domain) to make requests to this server.
 // 'origin' tells which front-end URL is allowed; 'credentials: true' enables sending cookies with requests.
