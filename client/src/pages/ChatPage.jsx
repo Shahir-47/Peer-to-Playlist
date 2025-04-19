@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Header } from "../components/Header";
 import { useAuthStore } from "../store/useAuthStore";
 import { useMatchStore } from "../store/useMatchStore";
@@ -7,6 +7,7 @@ import { Link, useParams } from "react-router-dom";
 import { Loader, UserX } from "lucide-react";
 import MessageInput from "../components/MessageInput";
 import FileAttachment from "../components/FileAttachment";
+import PreviewModal from "../components/PreviewModal";
 
 const ChatPage = () => {
 	const { getMyMatches, matches, isLoadingMyMatches } = useMatchStore();
@@ -24,6 +25,9 @@ const ChatPage = () => {
 	// Find the matched user from the matches array
 	// This is used to display the match's name and image in the chat header
 	const match = matches.find((m) => m?._id === id);
+
+	// State to manage modal preview of an attachment
+	const [previewModalData, setPreviewModalData] = useState(null);
 
 	// Fetch matches and messages when the component mounts
 	useEffect(() => {
@@ -86,11 +90,18 @@ const ChatPage = () => {
 											: "bg-gray-200 text-gray-800"
 									}`}
 								>
+									{/* If there is an attached file, render the clickable FileAttachment */}
 									{msg.fileUrl && (
 										<div className="mb-2">
 											<FileAttachment
 												fileUrl={msg.fileUrl}
 												fileType={msg.fileType}
+												onClick={() =>
+													setPreviewModalData({
+														fileUrl: msg.fileUrl,
+														mimeType: msg.fileType,
+													})
+												}
 											/>
 										</div>
 									)}
@@ -101,8 +112,15 @@ const ChatPage = () => {
 					)}
 				</div>
 				{/* input for messages */}
-				{/* TODO add file input */}
 				<MessageInput match={match} />
+
+				{/* universal preview modal */}
+				<PreviewModal
+					visible={Boolean(previewModalData)}
+					setVisible={(v) => !v && setPreviewModalData(null)}
+					fileUrl={previewModalData?.fileUrl}
+					mimeType={previewModalData?.mimeType}
+				/>
 			</div>
 		</div>
 	);

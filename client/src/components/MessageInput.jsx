@@ -1,15 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import { useMessageStore } from "../store/useMessageStore";
 import { Send, Smile, Paperclip, X } from "lucide-react";
+import {
+	FaFilePdf,
+	FaFileWord,
+	FaFileExcel,
+	FaFilePowerpoint,
+	FaFileArchive,
+	FaFileAlt,
+} from "react-icons/fa";
 import EmojiPicker from "emoji-picker-react";
-import FilePreview from "reactjs-file-preview";
 
-//TODO - modify to allow file uploads
+const MAX_ATTACHMENTS = 10;
 
 const MessageInput = ({ match }) => {
 	const [message, setMessage] = useState("");
-	const [file, setFile] = useState(null);
-	const [fileType, setFileType] = useState("");
+	const [attachments, setAttachments] = useState([]);
 	const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 	const emojiPickerRef = useRef(null);
 	const fileInputRef = useRef(null);
@@ -20,45 +26,44 @@ const MessageInput = ({ match }) => {
 		e.preventDefault(); // so it doesn't refresh the page
 
 		// if the message is empty and no file is selected, do nothing
-		if (message.trim() === "" && !file) {
+		if (!message.trim() && attachments.length === 0) {
 			return;
 		}
 
-		sendMessage(match._id, message, file, fileType); // send message to the backend
+		sendMessage(match._id, message, attachments); // send message to the backend
 		setMessage(""); // empties message input after previous message is sent
-		setFile(null); // reset file input
-		setFileType(""); // reset file type
+		setAttachments([]); // empties attachments after previous message is sent
 	};
 
 	const handleFileChange = (e) => {
-		const selectedFile = e.target.files[0];
+		const file = e.target.files[0];
+		if (!file || attachments.length >= MAX_ATTACHMENTS) return;
 
-		if (selectedFile) {
-			const reader = new FileReader();
-			reader.onloadend = () => {
-				setFile(reader.result);
+		const name = file.name;
+		const ext = name.includes(".") ? name.split(".").pop().toLowerCase() : "";
 
-				// Determine file type explicitly
-				if (selectedFile.type.startsWith("image")) {
-					setFileType("image");
-				} else if (selectedFile.type === "application/pdf") {
-					setFileType("pdf");
-				} else if (selectedFile.type.startsWith("audio")) {
-					setFileType("audio");
-				} else if (selectedFile.type.startsWith("video")) {
-					setFileType("video");
-				} else {
-					setFileType("document");
-				}
-			};
-			reader.readAsDataURL(selectedFile);
-		}
+		const reader = new FileReader();
+		reader.onloadend = () => {
+			let category;
+			if (file.type.startsWith("image/")) category = "image";
+			else if (file.type.startsWith("video/")) category = "video";
+			else if (file.type.startsWith("audio/")) category = "audio";
+			else if (ext === "pdf") category = "pdf";
+			else if (["xls", "xlsx", "csv"].includes(ext)) category = "spreadsheet";
+			else if (["ppt", "pptx"].includes(ext)) category = "presentation";
+			else if (["doc", "docx"].includes(ext)) category = "word";
+			else if (["zip", "rar", "7z", "tar", "gz"].includes(ext))
+				category = "archive";
+			else category = "other";
+
+			const newAttachment = { data: reader.result, name, ext, category };
+			setAttachments((prev) => [...prev, newAttachment]);
+		};
+		reader.readAsDataURL(file);
 	};
 
-	// Remove the selected file (clear the attachment)
-	const removeFile = () => {
-		setFile(null);
-		setFileType("");
+	const removeAttachment = (idx) => {
+		setAttachments((prev) => prev.filter((_, i) => i !== idx));
 	};
 
 	// to exit the emoji picker
@@ -82,26 +87,122 @@ const MessageInput = ({ match }) => {
 		};
 	}, []);
 
+	// helper to pick icon + label
+	const renderPreview = (att) => {
+		const { data, category, name, ext } = att;
+		switch (category) {
+			case "image":
+				return (
+					<img
+						src={data}
+						alt={name}
+						className="w-32 h-32 object-cover rounded-md"
+					/>
+				);
+			case "video":
+				return (
+					<video
+						src={data}
+						controls
+						className="w-32 h-32 object-cover rounded-md"
+					/>
+				);
+			case "audio":
+				return <audio src={data} controls className="mt-1 h-12 w-100" />;
+			case "pdf":
+				return (
+					<div className="flex items-center space-x-2">
+						<FaFilePdf size={32} className="text-gray-600" />
+						<div className="flex flex-col">
+							<span className="font-medium text-gray-800 truncate">{name}</span>
+							<span className="text-gray-500 text-sm">PDF Document</span>
+						</div>
+					</div>
+				);
+			case "spreadsheet":
+				return (
+					<div className="flex items-center space-x-2">
+						<FaFileExcel size={32} className="text-gray-600" />
+						<div className="flex flex-col">
+							<span className="font-medium text-gray-800 truncate">{name}</span>
+							<span className="text-gray-500 text-sm">
+								{ext === "csv" ? "CSV File" : "Excel Spreadsheet"}
+							</span>
+						</div>
+					</div>
+				);
+			case "presentation":
+				return (
+					<div className="flex items-center space-x-2">
+						<FaFilePowerpoint size={32} className="text-gray-600" />
+						<div className="flex flex-col">
+							<span className="font-medium text-gray-800 truncate">{name}</span>
+							<span className="text-gray-500 text-sm">
+								PowerPoint Presentation
+							</span>
+						</div>
+					</div>
+				);
+			case "word":
+				return (
+					<div className="flex items-center space-x-2">
+						<FaFileWord size={32} className="text-gray-600" />
+						<div className="flex flex-col">
+							<span className="font-medium text-gray-800 truncate">{name}</span>
+							<span className="text-gray-500 text-sm">Word Document</span>
+						</div>
+					</div>
+				);
+			case "archive":
+				return (
+					<div className="flex items-center space-x-2">
+						<FaFileArchive size={32} className="text-gray-600" />
+						<div className="flex flex-col">
+							<span className="font-medium text-gray-800 truncate">{name}</span>
+							<span className="text-gray-500 text-sm">Archive File</span>
+						</div>
+					</div>
+				);
+			default:
+				return (
+					<div className="flex items-center space-x-2">
+						<FaFileAlt size={32} className="text-gray-600" />
+						<div className="flex flex-col">
+							<span className="font-medium text-gray-800 truncate">{name}</span>
+							<span className="text-gray-500 text-sm">
+								{ext.toUpperCase()} File
+							</span>
+						</div>
+					</div>
+				);
+		}
+	};
+
 	//styling
 	return (
 		<div className="w-full">
-			{file && (
-				<div className="mb-2 flex items-center bg-gray-100 p-2 rounded-md shadow">
-					<div className="flex-grow h-20 w-20">
-						<FilePreview
-							preview={file}
-							fileType={fileType}
-							clarity="800"
-							style={{ width: "100%", height: "100%", objectFit: "cover" }}
-						/>
+			{attachments.length > 0 && (
+				<div className="mb-2">
+					<div className="flex items-center space-x-2 overflow-x-auto p-2 bg-gray-300 rounded-md shadow">
+						{attachments.map((att, idx) => (
+							<div
+								key={idx}
+								className={`relative flex-shrink-0 bg-white p-1 rounded-md ${
+									["image", "video"].includes(att.category)
+										? "h-32 flex items-end justify-center"
+										: "h-12 flex items-center space-x-2"
+								}`}
+							>
+								{renderPreview(att)}
+								<button
+									onClick={() => removeAttachment(idx)}
+									className="absolute bg-white border border-gray-300 rounded-full p-1 shadow-md text-red-600 hover:bg-red-50 z-10 top-0 right-0 transform translate-x-1 -translate-y-2/3 cursor-pointer"
+								>
+									<X size={16} />
+								</button>
+							</div>
+						))}
 					</div>
-					<button
-						onClick={removeFile}
-						type="button"
-						className="ml-2 text-gray-600 hover:text-red-600 transition"
-					>
-						<X size={20} />
-					</button>
 				</div>
 			)}
 
@@ -119,6 +220,7 @@ const MessageInput = ({ match }) => {
 				<button
 					type="button"
 					onClick={() => fileInputRef.current.click()}
+					disabled={attachments.length >= MAX_ATTACHMENTS}
 					className="absolute left-12 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-pink-500 focus:outline-none"
 				>
 					<Paperclip size={20} />
@@ -126,7 +228,7 @@ const MessageInput = ({ match }) => {
 				<input
 					ref={fileInputRef}
 					type="file"
-					accept="image/*,audio/*,video/*,application/pdf" // Allow various file types
+					accept="*/*"
 					className="hidden"
 					onChange={handleFileChange}
 				/>
