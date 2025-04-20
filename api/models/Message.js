@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import User from "./User.js";
+import attachmentSchema from "./Attachment.js";
 
 const messageSchema = new mongoose.Schema(
 	{
@@ -20,17 +21,13 @@ const messageSchema = new mongoose.Schema(
 		content: {
 			type: String, //we change to mp3
 			required: function () {
-				// Require content if fileUrl is not provided
-				return !this.fileUrl;
+				// Require content if there are no attachments
+				return this.attachments.length === 0;
 			},
 		},
-		fileUrl: {
-			type: String, // URL of the file sent (if any)
-			default: "",
-		},
-		fileType: {
-			type: String,
-			enum: ["image", "audio", "video", "pdf", "document"],
+		attachments: {
+			type: [attachmentSchema], // Uses the attachmentSchema defined in Attachment.js
+			default: [], // Default to an empty array if no attachments are provided
 		},
 	},
 	{ timestamps: true } // This option automatically adds createdAt and updatedAt fields to the schema.

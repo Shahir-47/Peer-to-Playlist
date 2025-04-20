@@ -4,14 +4,21 @@ import { getConnectedUsers, getIO } from "../socket/socket.server.js";
 
 export const sendMessage = async (req, res) => {
 	try {
-		const { content, receiverId, file, fileType } = req.body;
+		const { content, receiverId, attachments = [] } = req.body;
 
-		let fileUrl = null;
-		if (file) {
-			// If a file is provided in base64 format, upload it to Cloudinary
-			if (file && file.startsWith("data:")) {
-				const uploadResponse = await cloudinary.uploader.upload(file);
-				fileUrl = uploadResponse.secure_url;
+		const savedAttachments = [];
+		for (const att of attachments) {
+			if (typeof att.data === "string" && att.data.startsWith("data:")) {
+				const uploadRes = await cloudinary.uploader.upload(att.data, {
+					folder: "chat_attachments",
+					resource_type: "auto",
+				});
+				savedAttachments.push({
+					url: uploadRes.secure_url,
+					name: att.name,
+					ext: att.ext,
+					category: att.category,
+				});
 			}
 		}
 
@@ -20,8 +27,7 @@ export const sendMessage = async (req, res) => {
 			sender: req.user.id,
 			receiver: receiverId,
 			content,
-			fileUrl,
-			fileType: fileUrl ? fileType : undefined,
+			attachments: savedAttachments,
 		});
 
 		// Get Socket.IO instance and connected users map

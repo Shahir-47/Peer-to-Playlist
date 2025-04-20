@@ -1,15 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useMessageStore } from "../store/useMessageStore";
 import { Send, Smile, Paperclip, X } from "lucide-react";
-import {
-	FaFilePdf,
-	FaFileWord,
-	FaFileExcel,
-	FaFilePowerpoint,
-	FaFileArchive,
-	FaFileAlt,
-} from "react-icons/fa";
 import EmojiPicker from "emoji-picker-react";
+import PreviewAttachment from "./PreviewAttachment";
 
 const MAX_ATTACHMENTS = 10;
 
@@ -87,122 +80,37 @@ const MessageInput = ({ match }) => {
 		};
 	}, []);
 
-	// helper to pick icon + label
-	const renderPreview = (att) => {
-		const { data, category, name, ext } = att;
-		switch (category) {
-			case "image":
-				return (
-					<img
-						src={data}
-						alt={name}
-						className="w-32 h-32 object-cover rounded-md"
-					/>
-				);
-			case "video":
-				return (
-					<video
-						src={data}
-						controls
-						className="w-32 h-32 object-cover rounded-md"
-					/>
-				);
-			case "audio":
-				return <audio src={data} controls className="mt-1 h-12 w-100" />;
-			case "pdf":
-				return (
-					<div className="flex items-center space-x-2">
-						<FaFilePdf size={32} className="text-gray-600" />
-						<div className="flex flex-col">
-							<span className="font-medium text-gray-800 truncate">{name}</span>
-							<span className="text-gray-500 text-sm">PDF Document</span>
-						</div>
-					</div>
-				);
-			case "spreadsheet":
-				return (
-					<div className="flex items-center space-x-2">
-						<FaFileExcel size={32} className="text-gray-600" />
-						<div className="flex flex-col">
-							<span className="font-medium text-gray-800 truncate">{name}</span>
-							<span className="text-gray-500 text-sm">
-								{ext === "csv" ? "CSV File" : "Excel Spreadsheet"}
-							</span>
-						</div>
-					</div>
-				);
-			case "presentation":
-				return (
-					<div className="flex items-center space-x-2">
-						<FaFilePowerpoint size={32} className="text-gray-600" />
-						<div className="flex flex-col">
-							<span className="font-medium text-gray-800 truncate">{name}</span>
-							<span className="text-gray-500 text-sm">
-								PowerPoint Presentation
-							</span>
-						</div>
-					</div>
-				);
-			case "word":
-				return (
-					<div className="flex items-center space-x-2">
-						<FaFileWord size={32} className="text-gray-600" />
-						<div className="flex flex-col">
-							<span className="font-medium text-gray-800 truncate">{name}</span>
-							<span className="text-gray-500 text-sm">Word Document</span>
-						</div>
-					</div>
-				);
-			case "archive":
-				return (
-					<div className="flex items-center space-x-2">
-						<FaFileArchive size={32} className="text-gray-600" />
-						<div className="flex flex-col">
-							<span className="font-medium text-gray-800 truncate">{name}</span>
-							<span className="text-gray-500 text-sm">Archive File</span>
-						</div>
-					</div>
-				);
-			default:
-				return (
-					<div className="flex items-center space-x-2">
-						<FaFileAlt size={32} className="text-gray-600" />
-						<div className="flex flex-col">
-							<span className="font-medium text-gray-800 truncate">{name}</span>
-							<span className="text-gray-500 text-sm">
-								{ext.toUpperCase()} File
-							</span>
-						</div>
-					</div>
-				);
-		}
-	};
-
 	//styling
 	return (
 		<div className="w-full">
 			{attachments.length > 0 && (
-				<div className="mb-2">
-					<div className="flex items-center space-x-2 overflow-x-auto p-2 bg-gray-300 rounded-md shadow">
-						{attachments.map((att, idx) => (
-							<div
-								key={idx}
-								className={`relative flex-shrink-0 bg-white p-1 rounded-md ${
-									["image", "video"].includes(att.category)
-										? "h-32 flex items-end justify-center"
-										: "h-12 flex items-center space-x-2"
-								}`}
+				<div className="mb-2 flex items-center space-x-2 overflow-x-auto p-2 pt-5 bg-gray-300 rounded-md shadow">
+					{attachments.map((att, idx) => (
+						<div
+							key={idx}
+							className={
+								att.category === "audio"
+									? "relative flex-shrink-0"
+									: `relative flex-shrink-0 bg-white p-1 rounded-md ${
+											["image", "video"].includes(att.category)
+												? "h-32 flex items-end justify-center"
+												: "h-12 flex items-center space-x-2"
+									  }`
+							}
+						>
+							<PreviewAttachment attachment={att} />
+							<button
+								onClick={() => removeAttachment(idx)}
+								className={
+									att.category === "audio"
+										? "absolute bg-white border border-gray-300 rounded-full p-1 shadow-md text-red-600 hover:bg-red-50 z-10 top-0 right-0 transform translate-x-1 -translate-y-2/6 cursor-pointer"
+										: "absolute bg-white border border-gray-300 rounded-full p-1 shadow-md text-red-600 hover:bg-red-50 z-10 top-0 right-0 transform translate-x-1 -translate-y-2/3 cursor-pointer"
+								}
 							>
-								{renderPreview(att)}
-								<button
-									onClick={() => removeAttachment(idx)}
-									className="absolute bg-white border border-gray-300 rounded-full p-1 shadow-md text-red-600 hover:bg-red-50 z-10 top-0 right-0 transform translate-x-1 -translate-y-2/3 cursor-pointer"
-								>
-									<X size={16} />
-								</button>
-							</div>
-						))}
-					</div>
+								<X size={16} />
+							</button>
+						</div>
+					))}
 				</div>
 			)}
 
