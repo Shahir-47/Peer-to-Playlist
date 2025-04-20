@@ -127,7 +127,7 @@ const ChatPage = () => {
 																att.category
 															)
 																? "w-50 flex items-end justify-center"
-																: "h-12 flex items-center space-x-2";
+																: "h-12 w-min flex items-center space-x-2";
 
 															return (
 																<div
@@ -151,14 +151,6 @@ const ChatPage = () => {
 				</div>
 				{/* input for messages */}
 				<MessageInput match={match} />
-
-				{/* universal preview modal */}
-				{/* <PreviewModal
-					visible={Boolean(previewModalData)}
-					setVisible={(v) => !v && setPreviewModalData(null)}
-					fileUrl={previewModalData?.fileUrl}
-					mimeType={previewModalData?.mimeType}
-				/> */}
 			</div>
 		</div>
 	);
