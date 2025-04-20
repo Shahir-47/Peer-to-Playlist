@@ -34,21 +34,16 @@ export default function PreviewAttachment({ attachment, onClick }) {
 			);
 		case "audio":
 			return (
-				<audio
-					src={src}
-					controls
-					onClick={onClick}
-					className="mt-1 w-12 w-100"
-				/>
+				<audio src={src} controls onClick={onClick} className="mt-1 w-100" />
 			);
 		case "pdf":
 			return (
 				<div
 					onClick={onClick}
-					className="flex items-center space-x-2 cursor-pointer"
+					className="flex items-center space-x-2 cursor-pointer text-left"
 				>
 					<FaFilePdf size={32} className="text-gray-800" />
-					<div>
+					<div className="w-38">
 						<div className="font-medium truncate text-gray-950">{name}</div>
 						<div className="text-sm text-gray-500">PDF Document</div>
 					</div>
@@ -58,10 +53,10 @@ export default function PreviewAttachment({ attachment, onClick }) {
 			return (
 				<div
 					onClick={onClick}
-					className="flex items-center space-x-2 cursor-pointer"
+					className="flex items-center space-x-2 cursor-pointer text-left"
 				>
 					<FaFileExcel size={32} className="text-gray-800" />
-					<div>
+					<div className="w-38">
 						<div className="font-medium truncate text-gray-950">{name}</div>
 						<div className="text-sm text-gray-500">
 							{ext === "csv" ? "CSV File" : "Excel Spreadsheet"}
@@ -73,12 +68,12 @@ export default function PreviewAttachment({ attachment, onClick }) {
 			return (
 				<div
 					onClick={onClick}
-					className="flex items-center space-x-2 cursor-pointer"
+					className="flex items-center space-x-2 cursor-pointer text-left"
 				>
 					<FaFilePowerpoint size={32} className="text-gray-800" />
-					<div>
+					<div className="w-38">
 						<div className="font-medium truncate text-gray-950">{name}</div>
-						<div className="text-sm text-gray-500">PowerPoint Presentation</div>
+						<div className="text-sm text-gray-500">PowerPoint</div>
 					</div>
 				</div>
 			);
@@ -89,7 +84,7 @@ export default function PreviewAttachment({ attachment, onClick }) {
 					className="flex items-center space-x-2 cursor-pointer text-left"
 				>
 					<FaFileWord size={32} className="text-gray-800" />
-					<div>
+					<div className="w-38">
 						<div className="font-medium truncate text-gray-950">{name}</div>
 						<div className="text-sm text-gray-500">Word Document</div>
 					</div>
@@ -99,10 +94,10 @@ export default function PreviewAttachment({ attachment, onClick }) {
 			return (
 				<div
 					onClick={onClick}
-					className="flex items-center space-x-2 cursor-pointer"
+					className="flex items-center space-x-2 cursor-pointer text-left"
 				>
 					<FaFileArchive size={32} className="text-gray-800" />
-					<div>
+					<div className="w-38">
 						<div className="font-medium truncate text-gray-950">{name}</div>
 						<div className="text-sm text-gray-500">Archive File</div>
 					</div>
@@ -112,10 +107,10 @@ export default function PreviewAttachment({ attachment, onClick }) {
 			return (
 				<div
 					onClick={onClick}
-					className="flex items-center space-x-2 cursor-pointer"
+					className="flex items-center space-x-2 cursor-pointer text-left"
 				>
 					<FaFileAlt size={32} className="text-gray-800" />
-					<div>
+					<div className="w-38">
 						<div className="font-medium truncate text-gray-950">{name}</div>
 						<div className="text-sm text-gray-500">
 							{ext.toUpperCase()} File

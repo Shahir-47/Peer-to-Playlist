@@ -7,6 +7,13 @@ import { Link, useParams } from "react-router-dom";
 import { Loader, UserX } from "lucide-react";
 import MessageInput from "../components/MessageInput";
 import PreviewAttachment from "../components/PreviewAttachment";
+import Masonry from "react-masonry-css";
+
+const masonryBreakpoints = {
+	default: 2, // two columns normally
+	768: 2, // ≥768px still 2 cols
+	480: 1, // <480px → 1 col
+};
 
 const ChatPage = () => {
 	const { getMyMatches, matches, isLoadingMyMatches } = useMatchStore();
@@ -87,26 +94,55 @@ const ChatPage = () => {
 									}`}
 								>
 									{/* If there is an attached file, render the clickable FileAttachment */}
-									{msg.attachments?.length > 0 && (
-										<div className="mb-2 flex items-center space-x-2 overflow-x-auto">
-											{msg.attachments.map((att, idx) => (
-												<div
-													key={idx}
-													className={
-														att.category === "audio"
-															? "relative flex-shrink-0"
-															: `relative flex-shrink-0 bg-white p-1 rounded-md ${
-																	["image", "video"].includes(att.category)
-																		? "h-32 flex items-end justify-center"
-																		: "h-12 flex items-center space-x-2"
-															  }`
-													}
-												>
-													<PreviewAttachment attachment={att} />
+									{msg.attachments?.length > 0 &&
+										(() => {
+											// split out audio vs rest
+											const audioItems = msg.attachments.filter(
+												(a) => a.category === "audio"
+											);
+											const otherItems = msg.attachments.filter(
+												(a) => a.category !== "audio"
+											);
+
+											return (
+												<div>
+													{/* render audio full‑width */}
+													{audioItems.map((att, i) => (
+														<div
+															key={`audio-${i}`}
+															className="mb-4 w-full bg-white p-1 rounded-md"
+														>
+															<PreviewAttachment attachment={att} />
+														</div>
+													))}
+
+													{/* Masonry for everything else */}
+													<Masonry
+														breakpointCols={masonryBreakpoints}
+														className="flex -ml-4"
+														columnClassName="pl-4"
+													>
+														{otherItems.map((att, i) => {
+															const sizeClasses = ["image", "video"].includes(
+																att.category
+															)
+																? "w-50 flex items-end justify-center"
+																: "h-12 flex items-center space-x-2";
+
+															return (
+																<div
+																	key={`other-${i}`}
+																	className={`mb-4 bg-white p-1 rounded-md ${sizeClasses}`}
+																>
+																	<PreviewAttachment attachment={att} />
+																</div>
+															);
+														})}
+													</Masonry>
 												</div>
-											))}
-										</div>
-									)}
+											);
+										})()}
+
 									{msg.content && <div>{msg.content}</div>}
 								</span>
 							</div>
