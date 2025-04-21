@@ -2,14 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import { useMessageStore } from "../store/useMessageStore";
 import { Send, Smile, Paperclip, X } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
-import FilePreview from "reactjs-file-preview";
+import PreviewAttachment from "./PreviewAttachment";
+import { axiosInstance } from "../lib/axios";
+import { toast } from "react-hot-toast";
 
-//TODO - modify to allow file uploads
+const MAX_ATTACHMENTS = 10;
 
 const MessageInput = ({ match }) => {
 	const [message, setMessage] = useState("");
-	const [file, setFile] = useState(null);
-	const [fileType, setFileType] = useState("");
+	const [attachments, setAttachments] = useState([]);
 	const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 	const emojiPickerRef = useRef(null);
 	const fileInputRef = useRef(null);
@@ -20,45 +21,103 @@ const MessageInput = ({ match }) => {
 		e.preventDefault(); // so it doesn't refresh the page
 
 		// if the message is empty and no file is selected, do nothing
-		if (message.trim() === "" && !file) {
+		if (!message.trim() && attachments.length === 0) {
 			return;
 		}
 
-		sendMessage(match._id, message, file, fileType); // send message to the backend
-		setMessage(""); // empties message input after previous message is sent
-		setFile(null); // reset file input
-		setFileType(""); // reset file type
-	};
-
-	const handleFileChange = (e) => {
-		const selectedFile = e.target.files[0];
-
-		if (selectedFile) {
-			const reader = new FileReader();
-			reader.onloadend = () => {
-				setFile(reader.result);
-
-				// Determine file type explicitly
-				if (selectedFile.type.startsWith("image")) {
-					setFileType("image");
-				} else if (selectedFile.type === "application/pdf") {
-					setFileType("pdf");
-				} else if (selectedFile.type.startsWith("audio")) {
-					setFileType("audio");
-				} else if (selectedFile.type.startsWith("video")) {
-					setFileType("video");
-				} else {
-					setFileType("document");
-				}
-			};
-			reader.readAsDataURL(selectedFile);
+		if (attachments.length > MAX_ATTACHMENTS) {
+			toast.error(
+				`You have attached ${attachments.length} files, but only ${MAX_ATTACHMENTS} are allowed.`
+			);
+			return;
 		}
+
+		sendMessage(match._id, message, attachments); // send message to the backend
+		setMessage(""); // empties message input after previous message is sent
+		setAttachments([]); // empties attachments after previous message is sent
 	};
 
-	// Remove the selected file (clear the attachment)
-	const removeFile = () => {
-		setFile(null);
-		setFileType("");
+	const handleFileChange = async (e) => {
+		const files = Array.from(e.target.files);
+		const availableSlots = MAX_ATTACHMENTS - attachments.length;
+
+		if (availableSlots <= 0) {
+			toast.error(`Only up to ${MAX_ATTACHMENTS} attachments are allowed.`);
+			e.target.value = "";
+			return;
+		}
+		if (files.length > availableSlots) {
+			toast.error(`Only ${availableSlots} more file(s) can be added.`);
+		}
+
+		const toUpload = files.slice(0, availableSlots);
+
+		for (const file of toUpload) {
+			const name = file.name;
+			const ext = name.includes(".") ? name.split(".").pop().toLowerCase() : "";
+			let category;
+
+			if (file.type.startsWith("image/")) category = "image";
+			else if (file.type.startsWith("video/")) category = "video";
+			else if (file.type.startsWith("audio/")) category = "audio";
+			else if (ext === "pdf") category = "pdf";
+			else if (["xls", "xlsx", "csv"].includes(ext)) category = "spreadsheet";
+			else if (["ppt", "pptx"].includes(ext)) category = "presentation";
+			else if (["doc", "docx"].includes(ext)) category = "word";
+			else if (["zip", "rar", "7z", "tar", "gz"].includes(ext))
+				category = "archive";
+			else category = "other";
+
+			// media → Cloudinary via base64
+			if (["image", "video", "audio"].includes(category)) {
+				const reader = new FileReader();
+				reader.onloadend = () => {
+					setAttachments((prev) => [
+						...prev,
+						{ data: reader.result, name, ext, category },
+					]);
+				};
+				reader.readAsDataURL(file);
+			} else {
+				try {
+					// get presigned URL + key from server
+					const { data } = await axiosInstance.post("/uploads/s3/presign", {
+						name,
+						type: file.type,
+					});
+					const { url, key } = data;
+
+					// PUT the file to S3
+					await fetch(url, {
+						method: "PUT",
+						body: file,
+						headers: { "Content-Type": file.type, ACL: "private" },
+					});
+
+					console.log("S3 bucket:", import.meta.env.VITE_S3_BUCKET);
+					console.log("Region:", import.meta.env.VITE_AWS_REGION);
+
+					// build the public URL
+					const publicUrl = `https://${import.meta.env.VITE_S3_BUCKET}.s3.${
+						import.meta.env.VITE_AWS_REGION
+					}.amazonaws.com/${key}`;
+
+					// push into attachments
+					setAttachments((prev) => [
+						...prev,
+						{ url: publicUrl, key, name, ext, category },
+					]);
+				} catch (err) {
+					console.error("S3 upload failed", err);
+					toast.error("Could not upload file. Please try again.");
+				}
+			}
+		}
+		e.target.value = "";
+	};
+
+	const removeAttachment = (idx) => {
+		setAttachments((prev) => prev.filter((_, i) => i !== idx));
 	};
 
 	// to exit the emoji picker
@@ -85,23 +144,45 @@ const MessageInput = ({ match }) => {
 	//styling
 	return (
 		<div className="w-full">
-			{file && (
-				<div className="mb-2 flex items-center bg-gray-100 p-2 rounded-md shadow">
-					<div className="flex-grow h-20 w-20">
-						<FilePreview
-							preview={file}
-							fileType={fileType}
-							clarity="800"
-							style={{ width: "100%", height: "100%", objectFit: "cover" }}
-						/>
-					</div>
-					<button
-						onClick={removeFile}
-						type="button"
-						className="ml-2 text-gray-600 hover:text-red-600 transition"
-					>
-						<X size={20} />
-					</button>
+			{/* Live counter note */}
+			{/* Show counter only when there's at least one attachment */}
+			{attachments.length > 0 && (
+				<div className="text-sm text-gray-600 mb-1">
+					{attachments.length}/{MAX_ATTACHMENTS} file
+					{attachments.length !== 1 ? "s" : ""} attached
+					{attachments.length > MAX_ATTACHMENTS
+						? ` (exceeded by ${attachments.length - MAX_ATTACHMENTS})`
+						: ""}
+				</div>
+			)}
+			{attachments.length > 0 && (
+				<div className="mb-2 flex items-center space-x-2 overflow-x-auto p-2 pt-5 bg-gray-300 rounded-md shadow">
+					{attachments.map((att, idx) => (
+						<div
+							key={idx}
+							className={
+								att.category === "audio"
+									? "relative flex-shrink-0"
+									: `relative flex-shrink-0 bg-white p-1 rounded-md ${
+											["image", "video"].includes(att.category)
+												? "h-32 flex items-end justify-center"
+												: "h-12 flex items-center space-x-2"
+									  }`
+							}
+						>
+							<PreviewAttachment attachment={att} />
+							<button
+								onClick={() => removeAttachment(idx)}
+								className={
+									att.category === "audio"
+										? "absolute bg-white border border-gray-300 rounded-full p-1 shadow-md text-red-600 hover:bg-red-50 z-10 top-0 right-0 transform translate-x-1 -translate-y-2/6 cursor-pointer"
+										: "absolute bg-white border border-gray-300 rounded-full p-1 shadow-md text-red-600 hover:bg-red-50 z-10 top-0 right-0 transform translate-x-1 -translate-y-2/3 cursor-pointer"
+								}
+							>
+								<X size={16} />
+							</button>
+						</div>
+					))}
 				</div>
 			)}
 
@@ -110,7 +191,7 @@ const MessageInput = ({ match }) => {
 				<button
 					type="button"
 					onClick={() => setShowEmojiPicker(!showEmojiPicker)} // toggle emoji picker
-					className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-pink-500 focus:outline-none"
+					className="cursor-pointer absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-pink-500 focus:outline-none"
 				>
 					<Smile size={24} />
 				</button>
@@ -119,14 +200,21 @@ const MessageInput = ({ match }) => {
 				<button
 					type="button"
 					onClick={() => fileInputRef.current.click()}
-					className="absolute left-12 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-pink-500 focus:outline-none"
+					disabled={attachments.length >= MAX_ATTACHMENTS}
+					className={
+						`absolute left-12 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-pink-500 focus:outline-none ` +
+						(attachments.length >= MAX_ATTACHMENTS
+							? "cursor-not-allowed opacity-50"
+							: "cursor-pointer")
+					}
 				>
 					<Paperclip size={20} />
 				</button>
 				<input
 					ref={fileInputRef}
 					type="file"
-					accept="image/*,audio/*,video/*,application/pdf" // Allow various file types
+					accept="*/*"
+					multiple
 					className="hidden"
 					onChange={handleFileChange}
 				/>

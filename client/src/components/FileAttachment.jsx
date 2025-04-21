@@ -1,27 +1,57 @@
-// client/src/components/FileAttachment.jsx
 import React from "react";
-import FilePreview from "reactjs-file-preview";
+import { FileText, FileAudio2, FileVideo2 } from "lucide-react";
 
-// This component displays a condensed preview inside a fixed container.
-// It wraps the preview within an anchor element so that when clicked it opens or downloads the file.
-const FileAttachment = ({ fileUrl, fileType }) => {
-	return (
-		<a
-			href={fileUrl}
-			download
-			target="_blank"
-			rel="noreferrer"
-			className="block"
-		>
-			<div className="p-2 border rounded-md shadow w-32 h-32 flex items-center justify-center overflow-hidden bg-white">
-				<FilePreview
-					preview={fileUrl}
-					fileType={fileType}
-					clarity="800"
-					style={{ width: "100%", height: "100%", objectFit: "cover" }}
+const FileAttachment = ({ fileUrl, fileType, onClick }) => {
+	let content;
+	switch (fileType) {
+		case "image":
+			content = (
+				<img
+					src={fileUrl}
+					alt="attachment"
+					className="w-full h-full object-cover"
 				/>
-			</div>
-		</a>
+			);
+			break;
+		case "video":
+			content = (
+				<video
+					src={fileUrl}
+					className="w-full h-full object-cover"
+					muted
+					loop
+					playsInline
+				/>
+			);
+			break;
+		case "audio":
+			content = (
+				<div className="flex flex-col items-center">
+					<FileAudio2 size={48} />
+					<audio src={fileUrl} controls className="mt-2 w-full" />
+				</div>
+			);
+			break;
+		case "pdf":
+		case "document":
+		default:
+			content = (
+				<div className="flex flex-col items-center text-gray-500">
+					<FileText size={48} />
+					<p className="mt-2 text-sm">
+						{fileType === "pdf" ? "PDF Document" : "Attachment"}
+					</p>
+				</div>
+			);
+	}
+
+	return (
+		<div
+			onClick={onClick}
+			className="cursor-pointer p-2 border rounded-md shadow w-32 h-32 flex items-center justify-center bg-white overflow-hidden"
+		>
+			{content}
+		</div>
 	);
 };
 

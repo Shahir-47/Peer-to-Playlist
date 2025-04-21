@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Header } from "../components/Header";
 import { useAuthStore } from "../store/useAuthStore";
 import { useMatchStore } from "../store/useMatchStore";
@@ -6,7 +6,15 @@ import { useMessageStore } from "../store/useMessageStore";
 import { Link, useParams } from "react-router-dom";
 import { Loader, UserX } from "lucide-react";
 import MessageInput from "../components/MessageInput";
-import FileAttachment from "../components/FileAttachment";
+import PreviewAttachment from "../components/PreviewAttachment";
+import ViewAttachmentModal from "../components/ViewAttachmentModal";
+import Masonry from "react-masonry-css";
+
+const masonryBreakpoints = {
+	default: 2, // two columns normally
+	768: 2, // ≥768px still 2 cols
+	480: 1, // <480px → 1 col
+};
 
 const ChatPage = () => {
 	const { getMyMatches, matches, isLoadingMyMatches } = useMatchStore();
@@ -17,6 +25,7 @@ const ChatPage = () => {
 		unsubscribeFromMessages,
 	} = useMessageStore();
 	const { authUser } = useAuthStore();
+	const [viewAttachment, setViewAttachment] = useState(null);
 
 	// Get the match ID from the URL parameters
 	const { id } = useParams();
@@ -24,6 +33,16 @@ const ChatPage = () => {
 	// Find the matched user from the matches array
 	// This is used to display the match's name and image in the chat header
 	const match = matches.find((m) => m?._id === id);
+
+	// Handle opening the attachment modal
+	const handleViewAttachmentClick = (attachment) => {
+		setViewAttachment(attachment);
+	};
+
+	// Handle closing the attachment modal
+	const handleCloseModal = () => {
+		setViewAttachment(null);
+	};
 
 	// Fetch matches and messages when the component mounts
 	useEffect(() => {
@@ -86,14 +105,61 @@ const ChatPage = () => {
 											: "bg-gray-200 text-gray-800"
 									}`}
 								>
-									{msg.fileUrl && (
-										<div className="mb-2">
-											<FileAttachment
-												fileUrl={msg.fileUrl}
-												fileType={msg.fileType}
-											/>
-										</div>
-									)}
+									{/* If there is an attached file, render the clickable FileAttachment */}
+									{msg.attachments?.length > 0 &&
+										(() => {
+											// split out audio vs rest
+											const audioItems = msg.attachments.filter(
+												(a) => a.category === "audio"
+											);
+											const otherItems = msg.attachments.filter(
+												(a) => a.category !== "audio"
+											);
+
+											return (
+												<div>
+													{/* render audio full‑width */}
+													{audioItems.map((att, i) => (
+														<div
+															key={`audio-${i}`}
+															className="mb-4 w-full bg-white p-1 rounded-md"
+														>
+															<PreviewAttachment attachment={att} />
+														</div>
+													))}
+
+													{/* Masonry for everything else */}
+													<Masonry
+														breakpointCols={masonryBreakpoints}
+														className="flex -ml-4"
+														columnClassName="pl-4"
+													>
+														{otherItems.map((att, i) => {
+															const sizeClasses = ["image", "video"].includes(
+																att.category
+															)
+																? "w-50 flex items-end justify-center"
+																: "h-12 w-min flex items-center space-x-2";
+
+															return (
+																<div
+																	key={`other-${i}`}
+																	className={`mb-4 bg-white p-1 rounded-md ${sizeClasses}`}
+																>
+																	<PreviewAttachment
+																		attachment={att}
+																		onClick={() =>
+																			handleViewAttachmentClick(att)
+																		}
+																	/>
+																</div>
+															);
+														})}
+													</Masonry>
+												</div>
+											);
+										})()}
+
 									{msg.content && <div>{msg.content}</div>}
 								</span>
 							</div>
@@ -101,8 +167,15 @@ const ChatPage = () => {
 					)}
 				</div>
 				{/* input for messages */}
-				{/* TODO add file input */}
 				<MessageInput match={match} />
+
+				{/* Modal for viewing attachments */}
+				{viewAttachment && (
+					<ViewAttachmentModal
+						attachment={viewAttachment}
+						onClose={handleCloseModal}
+					/>
+				)}
 			</div>
 		</div>
 	);

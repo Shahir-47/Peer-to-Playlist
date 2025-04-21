@@ -71,10 +71,10 @@ const Sidebar = () => {
 
 			{/* Button to open sidebar on smaller screens */}
 			<button
-				className="lg:hidden fixed top-4 left-4 p-2 bg-pink-500 text-white rounded-md z-0"
+				className="lg:hidden fixed top-4 left-4 md:pt-2 md:pl-2.5 p-2.0 pl-2.5 bg-pink-500 text-white rounded-md z-0"
 				onClick={toggleSidebar}
 			>
-				<MessageCircle size={24} />
+				<MessageCircle size={30} />
 			</button>
 		</>
 	);

@@ -10,6 +10,7 @@ import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import matchRoutes from "./routes/matchRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
+import uploadRoutes from "./routes/upload.js";
 
 // Import the database connection function
 import { connectDB } from "./config/db.js";
@@ -57,6 +58,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/matches", matchRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/uploads", uploadRoutes);
 
 // Serve static files from the React app in production mode.
 // When the app is built, the static files are in the 'client/build' directory.
