@@ -94,9 +94,6 @@ const MessageInput = ({ match }) => {
 						headers: { "Content-Type": file.type, ACL: "private" },
 					});
 
-					console.log("S3 bucket:", import.meta.env.VITE_S3_BUCKET);
-					console.log("Region:", import.meta.env.VITE_AWS_REGION);
-
 					// build the public URL
 					const publicUrl = `https://${import.meta.env.VITE_S3_BUCKET}.s3.${
 						import.meta.env.VITE_AWS_REGION
@@ -218,20 +215,6 @@ const MessageInput = ({ match }) => {
 					className="hidden"
 					onChange={handleFileChange}
 				/>
-
-				{/* here for file input */}
-				{/* <input 
-                type="file" 
-                id="file-selector" 
-                multiple
-            /> */}
-				{/* <script>
-  const fileSelector = document.getElementById('file-selector');
-  fileSelector.addEventListener('change', (event) => {
-    const fileList = event.target.files;
-    console.log(fileList);
-  });
-</script> */}
 
 				{/* input for messages */}
 				<input

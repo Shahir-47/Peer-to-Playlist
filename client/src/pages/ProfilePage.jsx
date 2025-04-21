@@ -32,8 +32,6 @@ const ProfilePage = () => {
 		}
 	};
 
-	console.log(image);
-
 	const handleSubmit = (e) => {
 		e.preventDefault(); // Stops page reload so we can handle form submission with JavaScript
 		updateProfile({ name, bio, age, gender, genderPreference, image }); // Call the update function to update user data
