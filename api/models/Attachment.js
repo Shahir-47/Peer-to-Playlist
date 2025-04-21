@@ -6,6 +6,10 @@ const attachmentSchema = new mongoose.Schema(
 			type: String, // the uploaded file’s public URL (e.g. Cloudinary secure_url)
 			required: true,
 		},
+		key: {
+			type: String,
+			required: true,
+		}, // the file’s key in S3 (e.g. userId/chat_attachments/1234567890_filename)
 		name: {
 			type: String, // original file name (with extension)
 			required: true,
@@ -15,7 +19,7 @@ const attachmentSchema = new mongoose.Schema(
 			required: true,
 		},
 		category: {
-			type: String, // "image" | "video" | "audio" | "pdf" | …
+			type: String,
 			enum: [
 				"image",
 				"video",

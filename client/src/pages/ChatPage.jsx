@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Header } from "../components/Header";
 import { useAuthStore } from "../store/useAuthStore";
 import { useMatchStore } from "../store/useMatchStore";
@@ -7,6 +7,7 @@ import { Link, useParams } from "react-router-dom";
 import { Loader, UserX } from "lucide-react";
 import MessageInput from "../components/MessageInput";
 import PreviewAttachment from "../components/PreviewAttachment";
+import ViewAttachmentModal from "../components/ViewAttachmentModal";
 import Masonry from "react-masonry-css";
 
 const masonryBreakpoints = {
@@ -24,6 +25,7 @@ const ChatPage = () => {
 		unsubscribeFromMessages,
 	} = useMessageStore();
 	const { authUser } = useAuthStore();
+	const [viewAttachment, setViewAttachment] = useState(null);
 
 	// Get the match ID from the URL parameters
 	const { id } = useParams();
@@ -31,6 +33,16 @@ const ChatPage = () => {
 	// Find the matched user from the matches array
 	// This is used to display the match's name and image in the chat header
 	const match = matches.find((m) => m?._id === id);
+
+	// Handle opening the attachment modal
+	const handleViewAttachmentClick = (attachment) => {
+		setViewAttachment(attachment);
+	};
+
+	// Handle closing the attachment modal
+	const handleCloseModal = () => {
+		setViewAttachment(null);
+	};
 
 	// Fetch matches and messages when the component mounts
 	useEffect(() => {
@@ -134,7 +146,12 @@ const ChatPage = () => {
 																	key={`other-${i}`}
 																	className={`mb-4 bg-white p-1 rounded-md ${sizeClasses}`}
 																>
-																	<PreviewAttachment attachment={att} />
+																	<PreviewAttachment
+																		attachment={att}
+																		onClick={() =>
+																			handleViewAttachmentClick(att)
+																		}
+																	/>
 																</div>
 															);
 														})}
@@ -151,6 +168,14 @@ const ChatPage = () => {
 				</div>
 				{/* input for messages */}
 				<MessageInput match={match} />
+
+				{/* Modal for viewing attachments */}
+				{viewAttachment && (
+					<ViewAttachmentModal
+						attachment={viewAttachment}
+						onClose={handleCloseModal}
+					/>
+				)}
 			</div>
 		</div>
 	);

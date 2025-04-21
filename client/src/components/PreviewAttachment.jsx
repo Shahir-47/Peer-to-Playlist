@@ -16,21 +16,25 @@ export default function PreviewAttachment({ attachment, onClick }) {
 	switch (category) {
 		case "image":
 			return (
-				<img
-					src={src}
-					alt={name}
-					onClick={onClick}
-					className="w-50 object-cover rounded-md cursor-pointer"
-				/>
+				<div className="w-50 h-32 bg-gray-100 rounded-sm overflow-hidden">
+					<img
+						src={src}
+						alt={name}
+						onClick={onClick}
+						className="w-full h-full object-contain"
+					/>
+				</div>
 			);
 		case "video":
 			return (
-				<video
-					src={src}
-					controls
-					onClick={onClick}
-					className="w-50 object-cover rounded-md cursor-pointer"
-				/>
+				<div className="w-50 h-32 rounded-sm overflow-hidden">
+					<video
+						src={src}
+						controls
+						onClick={onClick}
+						className="w-full h-full object-contain"
+					/>
+				</div>
 			);
 		case "audio":
 			return (

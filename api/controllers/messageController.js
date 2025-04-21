@@ -8,13 +8,22 @@ export const sendMessage = async (req, res) => {
 
 		const savedAttachments = [];
 		for (const att of attachments) {
-			if (typeof att.data === "string" && att.data.startsWith("data:")) {
+			if (att.url) {
+				savedAttachments.push({
+					url: att.url,
+					key: att.key,
+					name: att.name,
+					ext: att.ext,
+					category: att.category,
+				});
+			} else if (typeof att.data === "string" && att.data.startsWith("data:")) {
 				const uploadRes = await cloudinary.uploader.upload(att.data, {
 					folder: "chat_attachments",
 					resource_type: "auto",
 				});
 				savedAttachments.push({
 					url: uploadRes.secure_url,
+					key: uploadRes.public_id,
 					name: att.name,
 					ext: att.ext,
 					category: att.category,

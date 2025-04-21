@@ -3,6 +3,8 @@ import { useMessageStore } from "../store/useMessageStore";
 import { Send, Smile, Paperclip, X } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import PreviewAttachment from "./PreviewAttachment";
+import { axiosInstance } from "../lib/axios";
+import { toast } from "react-hot-toast";
 
 const MAX_ATTACHMENTS = 10;
 
@@ -23,21 +25,38 @@ const MessageInput = ({ match }) => {
 			return;
 		}
 
+		if (attachments.length > MAX_ATTACHMENTS) {
+			toast.error(
+				`You have attached ${attachments.length} files, but only ${MAX_ATTACHMENTS} are allowed.`
+			);
+			return;
+		}
+
 		sendMessage(match._id, message, attachments); // send message to the backend
 		setMessage(""); // empties message input after previous message is sent
 		setAttachments([]); // empties attachments after previous message is sent
 	};
 
-	const handleFileChange = (e) => {
-		const file = e.target.files[0];
-		if (!file || attachments.length >= MAX_ATTACHMENTS) return;
+	const handleFileChange = async (e) => {
+		const files = Array.from(e.target.files);
+		const availableSlots = MAX_ATTACHMENTS - attachments.length;
 
-		const name = file.name;
-		const ext = name.includes(".") ? name.split(".").pop().toLowerCase() : "";
+		if (availableSlots <= 0) {
+			toast.error(`Only up to ${MAX_ATTACHMENTS} attachments are allowed.`);
+			e.target.value = "";
+			return;
+		}
+		if (files.length > availableSlots) {
+			toast.error(`Only ${availableSlots} more file(s) can be added.`);
+		}
 
-		const reader = new FileReader();
-		reader.onloadend = () => {
+		const toUpload = files.slice(0, availableSlots);
+
+		for (const file of toUpload) {
+			const name = file.name;
+			const ext = name.includes(".") ? name.split(".").pop().toLowerCase() : "";
 			let category;
+
 			if (file.type.startsWith("image/")) category = "image";
 			else if (file.type.startsWith("video/")) category = "video";
 			else if (file.type.startsWith("audio/")) category = "audio";
@@ -49,10 +68,52 @@ const MessageInput = ({ match }) => {
 				category = "archive";
 			else category = "other";
 
-			const newAttachment = { data: reader.result, name, ext, category };
-			setAttachments((prev) => [...prev, newAttachment]);
-		};
-		reader.readAsDataURL(file);
+			// media → Cloudinary via base64
+			if (["image", "video", "audio"].includes(category)) {
+				const reader = new FileReader();
+				reader.onloadend = () => {
+					setAttachments((prev) => [
+						...prev,
+						{ data: reader.result, name, ext, category },
+					]);
+				};
+				reader.readAsDataURL(file);
+			} else {
+				try {
+					// get presigned URL + key from server
+					const { data } = await axiosInstance.post("/uploads/s3/presign", {
+						name,
+						type: file.type,
+					});
+					const { url, key } = data;
+
+					// PUT the file to S3
+					await fetch(url, {
+						method: "PUT",
+						body: file,
+						headers: { "Content-Type": file.type, ACL: "private" },
+					});
+
+					console.log("S3 bucket:", import.meta.env.VITE_S3_BUCKET);
+					console.log("Region:", import.meta.env.VITE_AWS_REGION);
+
+					// build the public URL
+					const publicUrl = `https://${import.meta.env.VITE_S3_BUCKET}.s3.${
+						import.meta.env.VITE_AWS_REGION
+					}.amazonaws.com/${key}`;
+
+					// push into attachments
+					setAttachments((prev) => [
+						...prev,
+						{ url: publicUrl, key, name, ext, category },
+					]);
+				} catch (err) {
+					console.error("S3 upload failed", err);
+					toast.error("Could not upload file. Please try again.");
+				}
+			}
+		}
+		e.target.value = "";
 	};
 
 	const removeAttachment = (idx) => {
@@ -83,6 +144,17 @@ const MessageInput = ({ match }) => {
 	//styling
 	return (
 		<div className="w-full">
+			{/* Live counter note */}
+			{/* Show counter only when there's at least one attachment */}
+			{attachments.length > 0 && (
+				<div className="text-sm text-gray-600 mb-1">
+					{attachments.length}/{MAX_ATTACHMENTS} file
+					{attachments.length !== 1 ? "s" : ""} attached
+					{attachments.length > MAX_ATTACHMENTS
+						? ` (exceeded by ${attachments.length - MAX_ATTACHMENTS})`
+						: ""}
+				</div>
+			)}
 			{attachments.length > 0 && (
 				<div className="mb-2 flex items-center space-x-2 overflow-x-auto p-2 pt-5 bg-gray-300 rounded-md shadow">
 					{attachments.map((att, idx) => (
@@ -119,7 +191,7 @@ const MessageInput = ({ match }) => {
 				<button
 					type="button"
 					onClick={() => setShowEmojiPicker(!showEmojiPicker)} // toggle emoji picker
-					className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-pink-500 focus:outline-none"
+					className="cursor-pointer absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-pink-500 focus:outline-none"
 				>
 					<Smile size={24} />
 				</button>
@@ -129,7 +201,12 @@ const MessageInput = ({ match }) => {
 					type="button"
 					onClick={() => fileInputRef.current.click()}
 					disabled={attachments.length >= MAX_ATTACHMENTS}
-					className="absolute left-12 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-pink-500 focus:outline-none"
+					className={
+						`absolute left-12 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-pink-500 focus:outline-none ` +
+						(attachments.length >= MAX_ATTACHMENTS
+							? "cursor-not-allowed opacity-50"
+							: "cursor-pointer")
+					}
 				>
 					<Paperclip size={20} />
 				</button>
@@ -137,6 +214,7 @@ const MessageInput = ({ match }) => {
 					ref={fileInputRef}
 					type="file"
 					accept="*/*"
+					multiple
 					className="hidden"
 					onChange={handleFileChange}
 				/>
