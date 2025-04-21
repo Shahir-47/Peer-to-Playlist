@@ -64,7 +64,6 @@ const ViewAttachmentModal = ({ attachment, onClose }) => {
 	const [publicUrl, setPublicUrl] = useState(null);
 	const [zipTree, setZipTree] = useState(null);
 	const [textData, setTextData] = useState("");
-	const [fontName, setFontName] = useState(null);
 	const [csvData, setCsvData] = useState([]); // array of row‑objects
 	const [csvCols, setCsvCols] = useState([]); // DataTable column defs
 
@@ -92,7 +91,6 @@ const ViewAttachmentModal = ({ attachment, onClose }) => {
 		setError(null);
 		setZipTree(null);
 		setTextData("");
-		setFontName(null);
 
 		// build a tree structure from the zip file
 		const buildTree = (files) => {
@@ -127,11 +125,26 @@ const ViewAttachmentModal = ({ attachment, onClose }) => {
 
 				// if S3, get a presigned URL for download
 				if (isS3 && attachment.key) {
+					const ext = (attachment.ext || "").toLowerCase();
+					const isOfficeFile = [
+						"doc",
+						"docx",
+						"xls",
+						"xlsx",
+						"ppt",
+						"pptx",
+					].includes(ext);
+
 					const { data } = await axiosInstance.post(
 						"/uploads/s3/presign-download",
-						{ key: attachment.key }
+						{
+							key: attachment.key,
+							expiresIn: isOfficeFile ? 900 : 60, // 15 minutes for Office files, 1 min for others
+						}
 					);
+
 					setPublicUrl(data.url);
+
 					const blob = await fetch(data.url).then((r) => r.blob());
 					blobUrl = URL.createObjectURL(blob);
 					setRawSrc(blobUrl);
@@ -158,15 +171,6 @@ const ViewAttachmentModal = ({ attachment, onClose }) => {
 					const text = await fetch(blobUrl || rawSrc).then((r) => r.text());
 					if (isCancelled) return;
 					setTextData(text);
-					setLoading(false);
-					return;
-				}
-				if (ext === "ttf") {
-					const name = attachment.name.replace(/\..+$/, "");
-					const font = new FontFace(name, `url(${blobUrl || publicUrl})`);
-					await font.load();
-					document.fonts.add(font);
-					setFontName(name);
 					setLoading(false);
 					return;
 				}
@@ -334,15 +338,6 @@ const ViewAttachmentModal = ({ attachment, onClose }) => {
 					frameBorder="0"
 					title={attachment.name}
 				/>
-			);
-		}
-		if (ext === "ttf") {
-			return (
-				<div className="flex flex-col items-center justify-center p-4">
-					<p className="text-2xl" style={{ fontFamily: fontName }}>
-						The quick brown fox jumps over the lazy dog.
-					</p>
-				</div>
 			);
 		}
 		// fallback
