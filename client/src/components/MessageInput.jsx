@@ -47,7 +47,7 @@ const MessageInput = ({ match }) => {
 				<Smile size={24} />
 			</button>
 
-            {/* here for file input */}
+            {/* file input */}
             <input 
                 type="file" 
                 id="file-selector" 
