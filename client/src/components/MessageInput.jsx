@@ -5,11 +5,17 @@ import EmojiPicker from "emoji-picker-react";
 import PreviewAttachment from "./PreviewAttachment";
 import { axiosInstance } from "../lib/axios";
 import { toast } from "react-hot-toast";
+import LinkPreviewCard from "./LinkPreviewCard";
 
 const MAX_ATTACHMENTS = 10;
 
+const extractUrls = (text = "") =>
+	Array.from(text.matchAll(/(https?:\/\/[^\s]+)/gi), (m) => m[1]);
+
 const MessageInput = ({ match }) => {
 	const [message, setMessage] = useState("");
+	const [linkPreviews, setLinkPreviews] = useState([]); // array of {url, preview}
+	const [showAllPreviews, setShowAllPreviews] = useState(false);
 	const [attachments, setAttachments] = useState([]);
 	const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 	const emojiPickerRef = useRef(null);
@@ -35,6 +41,8 @@ const MessageInput = ({ match }) => {
 		sendMessage(match._id, message, attachments); // send message to the backend
 		setMessage(""); // empties message input after previous message is sent
 		setAttachments([]); // empties attachments after previous message is sent
+		setLinkPreviews([]); // empties link previews after previous message is sent
+		setShowAllPreviews(false); // resets the state of link previews
 	};
 
 	const handleFileChange = async (e) => {
@@ -117,6 +125,29 @@ const MessageInput = ({ match }) => {
 		setAttachments((prev) => prev.filter((_, i) => i !== idx));
 	};
 
+	useEffect(() => {
+		const urls = extractUrls(message);
+		if (urls.length === 0) {
+			setLinkPreviews([]);
+			setShowAllPreviews(false);
+			return;
+		}
+
+		// fetch all previews
+		Promise.all(
+			urls.map((url) =>
+				axiosInstance
+					.post("/link-preview", { url })
+					.then((r) => ({ url, preview: r.data }))
+					.catch(() => null)
+			)
+		).then((results) => {
+			const valid = results.filter((r) => r && r.preview);
+			setLinkPreviews(valid);
+			setShowAllPreviews(false);
+		});
+	}, [message]);
+
 	// to exit the emoji picker
 	useEffect(() => {
 		// Function to handle clicks outside the emoji picker
@@ -180,6 +211,37 @@ const MessageInput = ({ match }) => {
 							</button>
 						</div>
 					))}
+				</div>
+			)}
+
+			{linkPreviews.length > 0 && (
+				<div className="mb-2">
+					<div className="bg-white border rounded max-h-33 overflow-y-auto p-2 space-y-2 relative">
+						{(showAllPreviews ? linkPreviews : linkPreviews.slice(0, 1)).map(
+							({ url, preview }, i) => (
+								<LinkPreviewCard
+									key={url + i}
+									preview={preview}
+									onClose={() =>
+										setLinkPreviews((prev) =>
+											prev.filter((_, idx) => idx !== i)
+										)
+									}
+								/>
+							)
+						)}
+
+						{/* now INSIDE the scroll box */}
+						{!showAllPreviews && linkPreviews.length > 1 && (
+							<p
+								className="sticky bottom-0 bg-white text-center text-sm text-blue-600 cursor-pointer hover:underline py-1"
+								onClick={() => setShowAllPreviews(true)}
+							>
+								Show {linkPreviews.length - 1} more link
+								{linkPreviews.length - 1 > 1 ? "s" : ""}
+							</p>
+						)}
+					</div>
 				</div>
 			)}
 
