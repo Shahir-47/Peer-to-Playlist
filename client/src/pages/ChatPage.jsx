@@ -8,7 +8,9 @@ import { Loader, UserX } from "lucide-react";
 import MessageInput from "../components/MessageInput";
 import PreviewAttachment from "../components/PreviewAttachment";
 import ViewAttachmentModal from "../components/ViewAttachmentModal";
+import LinkPreviewCard from "../components/LinkPreviewCard";
 import Masonry from "react-masonry-css";
+import { axiosInstance } from "../lib/axios";
 
 const masonryBreakpoints = {
 	default: 2, // two columns normally
@@ -26,6 +28,7 @@ const ChatPage = () => {
 	} = useMessageStore();
 	const { authUser } = useAuthStore();
 	const [viewAttachment, setViewAttachment] = useState(null);
+	const [linkPreviewMap, setLinkPreviewMap] = useState({}); // message._id -> [{ url, preview }]
 
 	const messagesEndRef = useRef(null); // dummy div to scroll to the bottom of the chat
 
@@ -69,6 +72,32 @@ const ChatPage = () => {
 	// Scroll to the bottom of the chat when new messages arrive
 	useEffect(() => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+	}, [messages]);
+
+	useEffect(() => {
+		const fetchPreviews = async () => {
+			const previewsPerMessage = {};
+
+			await Promise.all(
+				messages.map(async (msg) => {
+					if (msg.linkPreviews?.length > 0) {
+						const results = await Promise.all(
+							msg.linkPreviews.map((url) =>
+								axiosInstance
+									.post("/link-preview", { url })
+									.then((r) => ({ url, preview: r.data }))
+									.catch(() => null)
+							)
+						);
+						previewsPerMessage[msg._id] = results.filter(Boolean);
+					}
+				})
+			);
+
+			setLinkPreviewMap(previewsPerMessage);
+		};
+
+		fetchPreviews();
 	}, [messages]);
 
 	if (isLoadingMyMatches) return <LoadingMessagesUI />;
@@ -173,8 +202,33 @@ const ChatPage = () => {
 													);
 												})()}
 
-											{msg.content && <div>{msg.content}</div>}
+											{linkPreviewMap[msg._id]?.length > 0 && (
+												<div className="mt-2 space-y-2">
+													{linkPreviewMap[msg._id].map(
+														({ url, preview }, idx) => (
+															<LinkPreviewCard
+																key={url + idx}
+																preview={preview}
+															/>
+														)
+													)}
+												</div>
+											)}
+
+											{msg.content && (
+												<div
+													className="break-words"
+													dangerouslySetInnerHTML={{
+														__html: msg.content.replace(
+															/(https?:\/\/[^\s]+)/g,
+															(url) =>
+																`<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-gray-100 underline break-words">${url}</a>`
+														),
+													}}
+												/>
+											)}
 										</span>
+
 										{/* Show date and time of the message */}
 										<p className="text-xs text-gray-500 mt-1">
 											{new Date(msg.createdAt).toLocaleString("en-US", {

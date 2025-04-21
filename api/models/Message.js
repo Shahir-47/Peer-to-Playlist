@@ -29,6 +29,10 @@ const messageSchema = new mongoose.Schema(
 			type: [attachmentSchema], // Uses the attachmentSchema defined in Attachment.js
 			default: [], // Default to an empty array if no attachments are provided
 		},
+		linkPreviews: {
+			type: [String],
+			default: [],
+		},
 	},
 	{ timestamps: true } // This option automatically adds createdAt and updatedAt fields to the schema.
 );

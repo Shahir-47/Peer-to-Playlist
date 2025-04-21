@@ -8,7 +8,7 @@ export const useMessageStore = create((set) => ({
 	messages: [], // List of all messages in the current conversation
 	loading: true, // Tracks loading state while fetching messages
 
-	sendMessage: async (receiverId, content, attachments) => {
+	sendMessage: async (receiverId, content, attachments, previewUrls = []) => {
 		try {
 			// show message in chat
 			set((state) => ({
@@ -20,6 +20,7 @@ export const useMessageStore = create((set) => ({
 						receiver: receiverId,
 						content,
 						attachments,
+						previewUrls,
 					},
 				],
 			}));
@@ -29,6 +30,7 @@ export const useMessageStore = create((set) => ({
 				receiverId,
 				content,
 				attachments,
+				previewUrls,
 			});
 		} catch (error) {
 			toast.error(error.response.data.message || "Something went wrong");

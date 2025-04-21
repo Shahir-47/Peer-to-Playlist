@@ -4,7 +4,12 @@ import { getConnectedUsers, getIO } from "../socket/socket.server.js";
 
 export const sendMessage = async (req, res) => {
 	try {
-		const { content, receiverId, attachments = [] } = req.body;
+		const {
+			content,
+			receiverId,
+			attachments = [],
+			previewUrls = [],
+		} = req.body;
 
 		const savedAttachments = [];
 		for (const att of attachments) {
@@ -37,6 +42,7 @@ export const sendMessage = async (req, res) => {
 			receiver: receiverId,
 			content,
 			attachments: savedAttachments,
+			linkPreviews: previewUrls,
 		});
 
 		// Get Socket.IO instance and connected users map

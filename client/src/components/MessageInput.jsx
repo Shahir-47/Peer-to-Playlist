@@ -14,7 +14,7 @@ const extractUrls = (text = "") =>
 
 const MessageInput = ({ match }) => {
 	const [message, setMessage] = useState("");
-	const [linkPreviews, setLinkPreviews] = useState([]); // array of {url, preview}
+	const [linkPreviews, setLinkPreviews] = useState([]); // array of {url, preview, include}
 	const [showAllPreviews, setShowAllPreviews] = useState(false);
 	const [attachments, setAttachments] = useState([]);
 	const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -38,7 +38,9 @@ const MessageInput = ({ match }) => {
 			return;
 		}
 
-		sendMessage(match._id, message, attachments); // send message to the backend
+		const previewUrls = linkPreviews.filter((p) => p.include).map((p) => p.url);
+
+		sendMessage(match._id, message, attachments, previewUrls); // send message to the backend
 		setMessage(""); // empties message input after previous message is sent
 		setAttachments([]); // empties attachments after previous message is sent
 		setLinkPreviews([]); // empties link previews after previous message is sent
@@ -143,7 +145,7 @@ const MessageInput = ({ match }) => {
 			)
 		).then((results) => {
 			const valid = results.filter((r) => r && r.preview);
-			setLinkPreviews(valid);
+			setLinkPreviews(valid.map((r) => ({ ...r, include: true })));
 			setShowAllPreviews(false);
 		});
 	}, [message]);
@@ -221,6 +223,7 @@ const MessageInput = ({ match }) => {
 							({ url, preview }, i) => (
 								<LinkPreviewCard
 									key={url + i}
+									close={true}
 									preview={preview}
 									onClose={() =>
 										setLinkPreviews((prev) =>
