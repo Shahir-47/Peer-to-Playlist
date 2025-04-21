@@ -16,7 +16,7 @@ export const useAuthStore = create((set) => ({
 			const res = await axiosInstance.post("/auth/signup", signupData); // Sends a POST request to the backend to create a new user
 			console.log(res.data);
 			set({ authUser: res.data.user }); // If successful, update authUser with the new user's data and set loading to false
-			initializeSocket(res.data.user_id);
+			initializeSocket(res.data.user._id); // Initialize socket connection with the new user's ID
 			toast.success("Account created successfully!"); // Show success message
 		} catch (error) {
 			toast.error(error.response.data.message || "Something went wrong!"); // Show error message
@@ -31,7 +31,7 @@ export const useAuthStore = create((set) => ({
 			const res = await axiosInstance.post("/auth/login", loginData); // Sends a POST request to the backend to log in the user
 			console.log(res.data);
 			set({ authUser: res.data.user }); // If successful, update authUser with the user's data and set loading to false
-			initializeSocket(res.data.user_id);
+			initializeSocket(res.data.user._id); // Initialize socket connection with the user's ID
 			toast.success("Logged in successfully!"); // Show success message
 		} catch (error) {
 			toast.error(error.response.data.message || "Something went wrong!"); // Show error message
@@ -43,7 +43,7 @@ export const useAuthStore = create((set) => ({
 	logout: async () => {
 		try {
 			const res = await axiosInstance.post("/auth/logout"); // Sends a POST request to the backend to log out the user
-			disconnectSocket();
+			disconnectSocket(); // Disconnect the socket connection
 			if (res.status === 200) set({ authUser: null }); // If successful, set authUser to null
 		} catch (error) {
 			toast.error(error.response.data.message || "Something went wrong!"); // Show error message
@@ -70,7 +70,7 @@ export const useAuthStore = create((set) => ({
 			*/
 
 			const res = await axiosInstance.get("/auth/me");
-			initializeSocket(res.data.user_id);
+			initializeSocket(res.data.user._id); // Initialize socket connection with the user's ID
 			set({ authUser: res.data.user }); // If successful, update authUser with the user's data
 		} catch (error) {
 			set({ authUser: null }); // If there's an error, set authUser to null
@@ -80,5 +80,7 @@ export const useAuthStore = create((set) => ({
 		}
 	},
 
-	setAuthUser: (user) => set({ authUser: user}),
+	// Function to update the authUser state directly
+	// This can be useful for updating user data without needing to call the API again
+	setAuthUser: (user) => set({ authUser: user }),
 }));

@@ -33,10 +33,10 @@ export const Header = () => {
 						{/* Logo */}
 						<Link
 							to="/"
-							className="group flex items-center space-x-2 hover:bg-white/10 px-2 py-1 rounded-md transition"
+							className="group flex items-center space-x-2 hover:bg-white/10 rounded-md transition"
 						>
 							<AudioLines className="w-8 h-8 text-white group-hover:scale-105 transition-transform" />
-							<span className="text-2xl font-bold text-white hidden sm:inline">
+							<span className="text-2xl font-bold text-white hidden sm:inline group-hover:scale-101 transition-transform">
 								Peer To Playlist
 							</span>
 						</Link>

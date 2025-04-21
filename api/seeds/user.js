@@ -1,4 +1,5 @@
-// Sample user for testing purposes
+// Randomly generates users with concise bios for testing purposes
+// This script connects to a MongoDB database, deletes existing users, and inserts new test users with random names, ages, and bios.
 
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";

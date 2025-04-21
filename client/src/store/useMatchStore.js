@@ -68,7 +68,7 @@ export const useMatchStore = create((set) => ({
 			//listening for events from backend called newMatch
 			socket.on("newMatch", (newMatch) => {
 				set((state) => ({
-						 matches: [...state.matches, newMatch],
+					matches: [...state.matches, newMatch],
 				}));
 				//notification
 				toast.success("You got a new match!");
@@ -86,5 +86,5 @@ export const useMatchStore = create((set) => ({
 		} catch (error) {
 			console.log(error);
 		}
-	}
+	},
 }));
