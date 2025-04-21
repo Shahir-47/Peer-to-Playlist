@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Header } from "../components/Header";
 import { useAuthStore } from "../store/useAuthStore";
 import { useMatchStore } from "../store/useMatchStore";
@@ -26,6 +26,8 @@ const ChatPage = () => {
 	} = useMessageStore();
 	const { authUser } = useAuthStore();
 	const [viewAttachment, setViewAttachment] = useState(null);
+
+	const messagesEndRef = useRef(null); // dummy div to scroll to the bottom of the chat
 
 	// Get the match ID from the URL parameters
 	const { id } = useParams();
@@ -64,6 +66,11 @@ const ChatPage = () => {
 		id,
 	]);
 
+	// Scroll to the bottom of the chat when new messages arrive
+	useEffect(() => {
+		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+	}, [messages]);
+
 	if (isLoadingMyMatches) return <LoadingMessagesUI />;
 	if (!match) return <MatchNotFound />;
 
@@ -81,89 +88,107 @@ const ChatPage = () => {
 					<h2 className="text-xl font-semibold text-gray-800">{match.name}</h2>
 				</div>
 
-				<div className="flex-grow overflow-y-auto mb-4 bg-white rounded-lg shadow p-4">
+				<div
+					className="flex-grow overflow-y-auto mb-4 bg-white rounded-lg shadow p-4"
+					ref={messagesEndRef} // Ref for scrolling to the bottom
+				>
 					{/* No messages yet */}
 					{messages.length === 0 ? (
 						<p className="text-center text-gray-500 py-8">
 							Start your conversation with {match.name}
 						</p>
 					) : (
-						// Map through messages and display them
-						messages.map((msg) => (
-							<div
-								key={msg._id}
-								className={`mb-3 ${
-									// Aligns my messages to the right and the other user's messages to the left
-									msg.sender === authUser._id ? "text-right" : "text-left"
-								}`}
-							>
-								<span
-									// Gives the sent messages a different color from the received ones
-									className={`inline-block p-3 rounded-lg max-w-xs lg:max-w-md ${
-										msg.sender === authUser._id
-											? "bg-pink-500 text-white"
-											: "bg-gray-200 text-gray-800"
-									}`}
-								>
-									{/* If there is an attached file, render the clickable FileAttachment */}
-									{msg.attachments?.length > 0 &&
-										(() => {
-											// split out audio vs rest
-											const audioItems = msg.attachments.filter(
-												(a) => a.category === "audio"
-											);
-											const otherItems = msg.attachments.filter(
-												(a) => a.category !== "audio"
-											);
+						<>
+							{
+								// Map through messages and display them
+								messages.map((msg) => (
+									<div
+										key={msg._id}
+										className={`mb-3 ${
+											// Aligns my messages to the right and the other user's messages to the left
+											msg.sender === authUser._id ? "text-right" : "text-left"
+										}`}
+									>
+										<span
+											// Gives the sent messages a different color from the received ones
+											className={`inline-block p-3 rounded-lg max-w-xs lg:max-w-md ${
+												msg.sender === authUser._id
+													? "bg-pink-500 text-white"
+													: "bg-gray-200 text-gray-800"
+											}`}
+										>
+											{/* If there is an attached file, render the clickable FileAttachment */}
+											{msg.attachments?.length > 0 &&
+												(() => {
+													// split out audio vs rest
+													const audioItems = msg.attachments.filter(
+														(a) => a.category === "audio"
+													);
+													const otherItems = msg.attachments.filter(
+														(a) => a.category !== "audio"
+													);
 
-											return (
-												<div>
-													{/* render audio full‑width */}
-													{audioItems.map((att, i) => (
-														<div
-															key={`audio-${i}`}
-															className="mb-4 w-full bg-white p-1 rounded-md"
-														>
-															<PreviewAttachment attachment={att} />
-														</div>
-													))}
-
-													{/* Masonry for everything else */}
-													<Masonry
-														breakpointCols={masonryBreakpoints}
-														className="flex -ml-4"
-														columnClassName="pl-4"
-													>
-														{otherItems.map((att, i) => {
-															const sizeClasses = ["image", "video"].includes(
-																att.category
-															)
-																? "w-50 flex items-end justify-center"
-																: "h-12 w-min flex items-center space-x-2";
-
-															return (
+													return (
+														<div>
+															{/* render audio full‑width */}
+															{audioItems.map((att, i) => (
 																<div
-																	key={`other-${i}`}
-																	className={`mb-4 bg-white p-1 rounded-md ${sizeClasses}`}
+																	key={`audio-${i}`}
+																	className="mb-4 w-full bg-white p-1 rounded-md"
 																>
-																	<PreviewAttachment
-																		attachment={att}
-																		onClick={() =>
-																			handleViewAttachmentClick(att)
-																		}
-																	/>
+																	<PreviewAttachment attachment={att} />
 																</div>
-															);
-														})}
-													</Masonry>
-												</div>
-											);
-										})()}
+															))}
 
-									{msg.content && <div>{msg.content}</div>}
-								</span>
-							</div>
-						))
+															{/* Masonry for everything else */}
+															<Masonry
+																breakpointCols={masonryBreakpoints}
+																className="flex -ml-4"
+																columnClassName="pl-4"
+															>
+																{otherItems.map((att, i) => {
+																	const sizeClasses = [
+																		"image",
+																		"video",
+																	].includes(att.category)
+																		? "w-50 flex items-end justify-center"
+																		: "h-12 w-min flex items-center space-x-2";
+
+																	return (
+																		<div
+																			key={`other-${i}`}
+																			className={`mb-4 bg-white p-1 rounded-md ${sizeClasses}`}
+																		>
+																			<PreviewAttachment
+																				attachment={att}
+																				onClick={() =>
+																					handleViewAttachmentClick(att)
+																				}
+																			/>
+																		</div>
+																	);
+																})}
+															</Masonry>
+														</div>
+													);
+												})()}
+
+											{msg.content && <div>{msg.content}</div>}
+										</span>
+										{/* Show date and time of the message */}
+										<p className="text-xs text-gray-500 mt-1">
+											{new Date(msg.createdAt).toLocaleString("en-US", {
+												hour: "2-digit",
+												minute: "2-digit",
+												hour12: true,
+											})}
+										</p>
+									</div>
+								))
+							}
+							{/* Scroll to the bottom of the chat when new messages arrive */}
+							<div ref={messagesEndRef} />
+						</>
 					)}
 				</div>
 				{/* input for messages */}

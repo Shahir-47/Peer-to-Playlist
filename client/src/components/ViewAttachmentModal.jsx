@@ -20,6 +20,8 @@ import {
 } from "react-icons/fa";
 import { axiosInstance } from "../lib/axios";
 import JSZip from "jszip";
+import Papa from "papaparse";
+import DataTable from "react-data-table-component";
 
 // This is used to display the contents of a zip file
 const DirectoryNode = ({ node }) => {
@@ -63,6 +65,8 @@ const ViewAttachmentModal = ({ attachment, onClose }) => {
 	const [zipTree, setZipTree] = useState(null);
 	const [textData, setTextData] = useState("");
 	const [fontName, setFontName] = useState(null);
+	const [csvData, setCsvData] = useState([]); // array of row‑objects
+	const [csvCols, setCsvCols] = useState([]); // DataTable column defs
 
 	// map file types to icons
 	const getFileIcon = (ext) => {
@@ -166,10 +170,34 @@ const ViewAttachmentModal = ({ attachment, onClose }) => {
 					setLoading(false);
 					return;
 				}
+				if (ext === "csv") {
+					const csvText = await fetch(blobUrl || rawSrc).then((r) => r.text());
+					if (isCancelled) return;
+
+					// Papa Parse into an array of objects (header row → keys)
+					const { data } = Papa.parse(csvText, {
+						header: true,
+						skipEmptyLines: true,
+					});
+
+					setCsvData(data);
+
+					// build columns for react-data-table-component
+					if (data.length > 0) {
+						const cols = Object.keys(data[0]).map((key) => ({
+							name: key,
+							selector: (row) => row[key],
+							sortable: true,
+						}));
+						setCsvCols(cols);
+					}
+
+					setLoading(false);
+					return;
+				}
+
 				// all Office handled by embed
-				if (
-					["doc", "docx", "xls", "xlsx", "csv", "ppt", "pptx"].includes(ext)
-				) {
+				if (["doc", "docx", "xls", "xlsx", "ppt", "pptx"].includes(ext)) {
 					setLoading(false);
 					return;
 				}
@@ -278,7 +306,22 @@ const ViewAttachmentModal = ({ attachment, onClose }) => {
 				</div>
 			);
 		}
-		if (["doc", "docx", "xls", "xlsx", "csv", "ppt", "pptx"].includes(ext)) {
+		// third‑party CSV grid
+		if (ext === "csv") {
+			return (
+				<div className="max-h-[80vh] overflow-auto">
+					<DataTable
+						columns={csvCols}
+						data={csvData}
+						pagination
+						dense
+						persistTableHead
+					/>
+				</div>
+			);
+		}
+
+		if (["doc", "docx", "xls", "xlsx", "ppt", "pptx"].includes(ext)) {
 			return (
 				<iframe
 					src={
