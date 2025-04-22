@@ -101,7 +101,7 @@ const MessageInput = ({ match }) => {
 					await fetch(url, {
 						method: "PUT",
 						body: file,
-						headers: { "Content-Type": file.type, ACL: "private" },
+						headers: { "Content-Type": file.type },
 					});
 
 					// build the public URL
