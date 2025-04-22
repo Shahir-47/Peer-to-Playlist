@@ -6,7 +6,6 @@ import {
 	Minimize2,
 	ChevronRight,
 	ChevronDown,
-	View,
 } from "lucide-react";
 import {
 	FaFileAlt,
