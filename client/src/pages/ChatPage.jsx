@@ -76,27 +76,24 @@ const ChatPage = () => {
 
 	useEffect(() => {
 		const fetchPreviews = async () => {
-			const previewsPerMessage = {};
+			for (const msg of messages) {
+				if (!msg.linkPreviews?.length || linkPreviewMap[msg._id]) continue;
 
-			await Promise.all(
-				messages.map(async (msg) => {
-					if (msg.linkPreviews?.length > 0) {
-						const results = await Promise.all(
-							msg.linkPreviews.map((url) =>
-								axiosInstance
-									.post("/link-preview", { url })
-									.then((r) => ({ url, preview: r.data }))
-									.catch(() => null)
-							)
-						);
-						previewsPerMessage[msg._id] = results.filter(Boolean);
-					}
-				})
-			);
+				const results = await Promise.all(
+					msg.linkPreviews.map((url) =>
+						axiosInstance
+							.post("/link-preview", { url })
+							.then((r) => ({ url, preview: r.data }))
+							.catch(() => null)
+					)
+				);
 
-			setLinkPreviewMap(previewsPerMessage);
+				setLinkPreviewMap((prev) => ({
+					...prev,
+					[msg._id]: results.filter(Boolean),
+				}));
+			}
 		};
-
 		fetchPreviews();
 	}, [messages]);
 
@@ -219,11 +216,43 @@ const ChatPage = () => {
 												<div
 													className="break-words"
 													dangerouslySetInnerHTML={{
-														__html: msg.content.replace(
-															/(https?:\/\/[^\s]+)/g,
-															(url) =>
-																`<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-gray-100 underline break-words">${url}</a>`
-														),
+														__html: msg.content
+															// URLs
+															.replace(
+																/(https?:\/\/[^\s]+)/g,
+																(url) =>
+																	`<a href="${url}" target="_blank" rel="noopener noreferrer" class="underline text-gray-100">${url}</a>`
+															)
+															// Emails
+															.replace(
+																/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
+																(email) =>
+																	`<a href="mailto:${email}" class="underline text-gray-100">${email}</a>`
+															)
+															// Location phrases like "Location: XYZ"
+															.replace(
+																/\bLocation:\s*(.+)/gi,
+																(_, location) =>
+																	`Location: <a href="https://www.google.com/maps/search/${encodeURIComponent(
+																		location
+																	)}" target="_blank" class="underline text-gray-100">${location}</a>`
+															)
+															// Dates (MM/DD/YYYY, MM/DD/YY, or MM-DD-YYYY)
+															.replace(
+																/\b(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})\b/g,
+																(_, m, d, y) => {
+																	const year = y.length === 2 ? `20${y}` : y;
+																	const startDate = `${year}-${m.padStart(
+																		2,
+																		"0"
+																	)}-${d.padStart(2, "0")}T09:00`; // 9AM default
+																	const calendarUrl = `https://calendar.google.com/calendar/r/eventedit?dates=${startDate.replace(
+																		/-/g,
+																		""
+																	)}/${startDate.replace(/-/g, "")}`;
+																	return `<a href="${calendarUrl}" target="_blank" class="underline text-gray-100">${m}/${d}/${y}</a>`;
+																}
+															),
 													}}
 												/>
 											)}
@@ -231,11 +260,29 @@ const ChatPage = () => {
 
 										{/* Show date and time of the message */}
 										<p className="text-xs text-gray-500 mt-1">
-											{new Date(msg.createdAt).toLocaleString("en-US", {
-												hour: "2-digit",
-												minute: "2-digit",
-												hour12: true,
-											})}
+											{(() => {
+												const date = new Date(msg.createdAt);
+												const day = date.getDate();
+												const month = date.toLocaleString("en-US", {
+													month: "short",
+												});
+												const year = date.getFullYear();
+												const time = date.toLocaleTimeString("en-US", {
+													hour: "numeric",
+													minute: "2-digit",
+													hour12: true,
+												});
+
+												const getOrdinal = (n) => {
+													const s = ["th", "st", "nd", "rd"];
+													const v = n % 100;
+													return s[(v - 20) % 10] || s[v] || s[0];
+												};
+
+												return `${day}${getOrdinal(
+													day
+												)} ${month} ${year}, ${time}`;
+											})()}
 										</p>
 									</div>
 								))

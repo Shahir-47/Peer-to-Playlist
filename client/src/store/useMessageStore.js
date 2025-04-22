@@ -20,7 +20,8 @@ export const useMessageStore = create((set) => ({
 						receiver: receiverId,
 						content,
 						attachments,
-						previewUrls,
+						linkPreviews: previewUrls,
+						createdAt: new Date().toISOString(),
 					},
 				],
 			}));
