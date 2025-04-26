@@ -1,5 +1,40 @@
 import User from "../models/User.js";
+import { makeSpotifyClient } from "../utils/spotifyClientFactory.js";
 import { getConnectedUsers, getIO } from "../socket/socket.server.js";
+
+// simple in-memory caches
+const spotifyNameCache = {
+	artists: new Map(),
+	tracks: new Map(),
+};
+
+async function fetchArtistNames(client, ids) {
+	const unknown = ids.filter((id) => !spotifyNameCache.artists.has(id));
+	if (unknown.length) {
+		const { body } = await client.getArtists(unknown);
+		body.artists.forEach((a) => {
+			spotifyNameCache.artists.set(a.id, a.name);
+		});
+	}
+	return ids.map((id) => ({
+		id,
+		name: spotifyNameCache.artists.get(id) || id,
+	}));
+}
+
+async function fetchTrackNames(client, ids) {
+	const unknown = ids.filter((id) => !spotifyNameCache.tracks.has(id));
+	if (unknown.length) {
+		const { body } = await client.getTracks(unknown);
+		body.tracks.forEach((t) => {
+			spotifyNameCache.tracks.set(t.id, t.name);
+		});
+	}
+	return ids.map((id) => ({
+		id,
+		name: spotifyNameCache.tracks.get(id) || id,
+	}));
+}
 
 export const swipeRight = async (req, res) => {
 	try {
@@ -125,7 +160,11 @@ export const getUserProfiles = async (req, res) => {
 	try {
 		const currentUser = await User.findById(req.user.id);
 
-		// Fetch all potential matches
+		const client = await makeSpotifyClient(
+			currentUser.spotify,
+			currentUser._id
+		);
+
 		const candidates = await User.find({
 			_id: { $ne: currentUser._id },
 			_id: {
@@ -142,50 +181,66 @@ export const getUserProfiles = async (req, res) => {
 			genderPreference: { $in: [currentUser.gender, "both"] },
 		});
 
-		// Score each candidate
+		// gather all common IDs to batch-fetch names
+		const allArtistIds = new Set();
+		const allTrackIds = new Set();
+
+		// first pass: compute overlaps
 		const scored = candidates.map((u) => {
 			const theirs = u.spotify || {};
-			const theirsArtists = theirs.topArtists || [];
-			const theirsTracks = theirs.topTracks || [];
-			const theirsSaved = theirs.savedTracks || [];
+			const mine = currentUser.spotify || {};
 
-			const mineArtists = currentUser.spotify?.topArtists || [];
-			const mineTracks = currentUser.spotify?.topTracks || [];
-			const mineSaved = currentUser.spotify?.savedTracks || [];
+			const commonArtists = (theirs.topArtists || []).filter((a) =>
+				(mine.topArtists || []).includes(a)
+			);
+			const commonTracks = (theirs.topTracks || []).filter((t) =>
+				(mine.topTracks || []).includes(t)
+			);
+			const commonSaved = (theirs.savedTracks || []).filter((s) =>
+				(mine.savedTracks || []).includes(s)
+			);
 
-			const artistOverlap = theirsArtists.filter((a) =>
-				mineArtists.includes(a)
-			).length;
+			commonArtists.forEach((id) => allArtistIds.add(id));
+			commonTracks.forEach((id) => allTrackIds.add(id));
+			commonSaved.forEach((id) => allTrackIds.add(id));
 
-			const trackOverlap = theirsTracks.filter((t) =>
-				mineTracks.includes(t)
-			).length;
-
-			const savedOverlap = theirsSaved.filter((s) =>
-				mineSaved.includes(s)
-			).length;
-
-			const score = artistOverlap * 3 + trackOverlap * 2 + savedOverlap;
-
-			return { user: u, score };
+			const score =
+				commonArtists.length * 3 + commonTracks.length * 2 + commonSaved.length;
+			return { user: u, score, commonArtists, commonTracks, commonSaved };
 		});
 
-		// Sort & filter out zero‐score
+		// now batch-fetch human names
+		await fetchArtistNames(client, [...allArtistIds]);
+		await fetchTrackNames(client, [...allTrackIds]);
+
+		// sort descending
 		scored.sort((a, b) => b.score - a.score);
 
-		const matches = scored.map((s) => ({
+		// build payload
+		const users = scored.map((s) => ({
 			_id: s.user._id,
 			name: s.user.name,
 			image: s.user.image,
+			age: s.user.age,
+			bio: s.user.bio,
 			score: s.score,
+			commonArtists: s.commonArtists.map((id) => ({
+				id,
+				name: spotifyNameCache.artists.get(id),
+			})),
+			commonTracks: s.commonTracks.map((id) => ({
+				id,
+				name: spotifyNameCache.tracks.get(id),
+			})),
+			commonSaved: s.commonSaved.map((id) => ({
+				id,
+				name: spotifyNameCache.tracks.get(id),
+			})),
 		}));
 
-		res.status(200).json({ success: true, users: matches });
+		res.status(200).json({ success: true, users });
 	} catch (err) {
 		console.error("Error in getUserProfiles:", err);
-		res.status(500).json({
-			success: false,
-			message: "Internal server error",
-		});
+		res.status(500).json({ success: false, message: "Internal server error" });
 	}
 };

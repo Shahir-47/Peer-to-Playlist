@@ -67,7 +67,14 @@ export const signup = async (req, res) => {
 
 			// Fetch Spotify data
 			try {
-				const client = makeSpotifyClient(spotifyTokens);
+				const client = await makeSpotifyClient(
+					{
+						accessToken: spotifyTokens.access_token,
+						refreshToken: spotifyTokens.refresh_token,
+						expiresAt: new Date(Date.now() + spotifyTokens.expires_in * 1000),
+					},
+					user._id
+				);
 
 				// Profile
 				const { body: profile } = await client.getMe();

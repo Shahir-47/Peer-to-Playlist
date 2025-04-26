@@ -1,5 +1,6 @@
 import TinderCard from "react-tinder-card";
 import { useMatchStore } from "../store/useMatchStore";
+import SharedChipsWithModal from "./SharedChipsWithModal";
 
 const SwipeArea = () => {
 	const { userProfiles, swipeRight, swipeLeft } = useMatchStore();
@@ -41,6 +42,36 @@ const SwipeArea = () => {
 
 							{/* BIO */}
 							<p className="text-gray-600">{user.bio}</p>
+
+							{/* Shared Artists (pink) */}
+							<SharedChipsWithModal
+								items={user.commonArtists}
+								icon="🎵"
+								title="Shared Artists"
+								bg="pink"
+								text="700"
+								limit={2}
+							/>
+
+							{/* Shared Tracks (blue) */}
+							<SharedChipsWithModal
+								items={user.commonTracks}
+								icon="🎶"
+								title="Shared Tracks"
+								bg="blue"
+								text="700"
+								limit={2}
+							/>
+
+							{/* Both Saved (green) */}
+							<SharedChipsWithModal
+								items={user.commonSaved}
+								icon="💾"
+								title="Both Saved Tracks"
+								bg="green"
+								text="700"
+								limit={2}
+							/>
 						</div>
 					</div>
 				</TinderCard>

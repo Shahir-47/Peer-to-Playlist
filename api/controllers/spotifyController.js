@@ -47,7 +47,6 @@ export const spotifyCallback = async (req, res) => {
 	try {
 		// Exchange code for tokens
 		const data = await spotifyApi.authorizationCodeGrant(code);
-		console.log("🎉 Tokens:", data.body);
 
 		// Send them back to the popup
 		res.send(`
