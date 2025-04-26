@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { FaSpotify } from "react-icons/fa";
 import { useAuthStore } from "../store/useAuthStore";
 import toast from "react-hot-toast";
 import { Eye, EyeOff } from "lucide-react";
+import { axiosInstance } from "../lib/axios";
 
 const SignUpForm = () => {
 	const [name, setName] = useState("");
@@ -15,6 +17,9 @@ const SignUpForm = () => {
 
 	const [passwordFeedback, setPasswordFeedback] = useState([]);
 	const [showPassword, setShowPassword] = useState(false);
+	const [spotifyUrl, setSpotifyUrl] = useState("");
+	const [spotifyTokens, setSpotifyTokens] = useState(null);
+	const popupRef = useRef(null);
 
 	const { signup, loading } = useAuthStore(); // get signup function and loading state from the auth store file
 
@@ -37,6 +42,40 @@ const SignUpForm = () => {
 		return feedback;
 	};
 
+	const connectSpotify = () => {
+		popupRef.current = window.open(
+			spotifyUrl,
+			"SpotifyLogin",
+			"width=500,height=600"
+		);
+	};
+
+	useEffect(() => {
+		axiosInstance
+			.get("/auth/spotify/login")
+			.then((res) => {
+				setSpotifyUrl(res.data.url);
+			})
+			.catch((err) => {
+				console.error("Spotify login axios failed:", err);
+				toast.error("Could not fetch Spotify URL");
+			});
+	}, []);
+
+	useEffect(() => {
+		const handleMessage = (e) => {
+			const allowed = [window.location.origin, "http://127.0.0.1:5000"];
+
+			if (!allowed.includes(e.origin)) return;
+
+			if (e.data?.type === "spotify") {
+				setSpotifyTokens(e.data.payload);
+			}
+		};
+		window.addEventListener("message", handleMessage);
+		return () => window.removeEventListener("message", handleMessage);
+	}, []);
+
 	return (
 		<form
 			className="space-y-6"
@@ -54,6 +93,7 @@ const SignUpForm = () => {
 					gender,
 					age,
 					genderPreference,
+					spotify: spotifyTokens,
 				}); // Call the signup function from the auth store with the form data
 				// The signup function will handle the API call and update the loading state
 			}}
@@ -301,6 +341,25 @@ const SignUpForm = () => {
 					</div>
 				</div>
 			</div>
+
+			{/* SPOTIFY CONNECT BUTTON */}
+			{!spotifyTokens ? (
+				<button
+					type="button"
+					onClick={connectSpotify}
+					className="w-full flex items-center justify-center py-2 px-4 rounded shadow-sm bg-green-600 hover:bg-green-700"
+				>
+					<FaSpotify className="h-5 w-5 mr-2" />
+					Connect with Spotify
+				</button>
+			) : (
+				<div className="flex items-center p-2 bg-green-100 rounded">
+					<FaSpotify className="h-8 w-8 text-green-600 mr-4 " />
+					<p className="text-green-800">
+						Spotify connected! Now we can match you with music lovers.
+					</p>
+				</div>
+			)}
 
 			{/* SIGN UP BUTTON */}
 			<div>
