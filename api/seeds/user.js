@@ -1,12 +1,43 @@
-// Randomly generates users with concise bios for testing purposes
-// This script connects to a MongoDB database, deletes existing users, and inserts new test users with random names, ages, and bios.
-
+// scripts/seedUsersWithSpotify.js
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import dotenv from "dotenv";
+import { v4 as uuidv4 } from "uuid";
 
 dotenv.config();
+
+// pools of real-looking Spotify IDs
+const sampleArtistIds = [
+	"5K4W6rqBFWDnAN6FQUkS6x",
+	"7dGJo4pcD2V6oG8kP0tJRR",
+	"2YZyLoL8N0Wb9xBt1NhZWg",
+	"5pKCCKE2ajJHZ9KAiaK11H",
+	"53XhwfbYqKCa1cC15pYq2q",
+	"5INjqkS1o8h1imAzPqGZBb",
+	"711MCceyCBcFnzjGY4Q7Un",
+	"7Ln80lUS6He07XvHI8qqHH",
+];
+const sampleTrackIds = [
+	"32A1xdQk9lRSFn5CEY5M2S",
+	"1i6N76fftMZhijOzFQ5ZtL",
+	"07oO1U722crtVcavi6frX6",
+	"5TRPicyLGbAF2LGBFbHGvO",
+	"2HHtWyy5CgaQbC7XSoOb0e",
+	"5JVbvCHX10U2pLa5DEqGav",
+	"6NdoWfQdyDIgMX6D2ugS9T",
+	"62yJjFtgkhUrXktIoSjgP2",
+	"2oBOaqeWSenwf7M6bJyR1A",
+	"4xigPf2sigSPmuFH3qCelB",
+];
+const sampleFollowed = [
+	"0tIqhSs5ERm2J1cOcbxTq5",
+	"0ONHkAv9pCAFxb0zJwDNTy",
+	"5K4W6rqBFWDnAN6FQUkS6x",
+	"0YC192cP3KPCRWx8zr8MfZ",
+	"6zFYqv1mOsgBRQbae3JJ9e",
+	"1Xyo4u8uXC1ZmMpatF05PJ",
+];
 
 const maleNames = [
 	"James",
@@ -19,7 +50,6 @@ const maleNames = [
 	"Joseph",
 	"Thomas",
 ];
-
 const femaleNames = [
 	"Mary",
 	"Patricia",
@@ -34,9 +64,7 @@ const femaleNames = [
 	"Nancy",
 	"Lisa",
 ];
-
 const genderPreferences = ["male", "female", "both"];
-
 const bioDescriptors = [
 	"Coffee addict",
 	"Cat lover",
@@ -60,51 +88,55 @@ const bioDescriptors = [
 	"Aspiring chef",
 ];
 
-const generateBio = () => {
-	const descriptors = bioDescriptors
-		.sort(() => 0.5 - Math.random())
-		.slice(0, 3);
-	return descriptors.join(" | ");
+const pick = (arr, n) => {
+	const copy = [...arr].sort(() => 0.5 - Math.random());
+	return copy.slice(0, n);
 };
 
-const generateRandomUser = (gender, index) => {
-	const names = gender === "male" ? maleNames : femaleNames;
-	const name = names[index];
-	const age = Math.floor(Math.random() * (45 - 21 + 1) + 21);
+const generateBio = () => pick(bioDescriptors, 3).join(" | ");
+
+const generateSpotifyData = () => {
+	const now = Date.now();
 	return {
-		name,
-		email: `${name.toLowerCase()}${age}@example.com`,
-		password: bcrypt.hashSync("password123", 10),
-		age,
-		gender,
-		genderPreference:
-			genderPreferences[Math.floor(Math.random() * genderPreferences.length)],
-		bio: generateBio(),
-		image: `/${gender}/${index + 1}.jpg`,
+		id: uuidv4(),
+		accessToken: uuidv4().replace(/-/g, ""),
+		refreshToken: uuidv4().replace(/-/g, ""),
+		expiresAt: new Date(now + 3600 * 1000), // 1 hr from now
+		topArtists: pick(sampleArtistIds, 5),
+		topTracks: pick(sampleTrackIds, 8),
+		savedTracks: pick(sampleTrackIds, 5),
+		followedArtists: pick(sampleFollowed, 4),
 	};
 };
 
-const seedUsers = async () => {
-	try {
-		await mongoose.connect(process.env.MONGO_URI); // connect to DB
-
-		await User.deleteMany({}); // delete all users in the DB
-
-		const maleUsers = maleNames.map((_, i) => generateRandomUser("male", i));
-		const femaleUsers = femaleNames.map((_, i) =>
-			generateRandomUser("female", i)
-		);
-
-		const allUsers = [...maleUsers, ...femaleUsers];
-
-		await User.insertMany(allUsers); // add all test users
-
-		console.log("Database seeded successfully with users having concise bios");
-	} catch (error) {
-		console.error("Error seeding database:", error);
-	} finally {
-		mongoose.disconnect();
-	}
+const generateRandomUser = (gender, i) => {
+	const names = gender === "male" ? maleNames : femaleNames;
+	const name = names[i % names.length];
+	const age = 21 + Math.floor(Math.random() * 25); // 21–45
+	const email = `${name.toLowerCase()}${age}@example.com`;
+	return {
+		name,
+		email,
+		password: bcrypt.hashSync("password123", 10),
+		age,
+		gender,
+		genderPreference: pick(genderPreferences, 1)[0],
+		bio: generateBio(),
+		image: `/${gender}/${(i % 5) + 1}.jpg`,
+		spotify: generateSpotifyData(),
+	};
 };
 
-seedUsers();
+const seed = async () => {
+	await mongoose.connect(process.env.MONGO_URI);
+	await User.deleteMany({});
+	const users = [
+		...maleNames.map((_, i) => generateRandomUser("male", i)),
+		...femaleNames.map((_, i) => generateRandomUser("female", i)),
+	];
+	await User.insertMany(users);
+	console.log("Seeded", users.length, "users with Spotify data");
+	mongoose.disconnect();
+};
+
+seed().catch(console.error);

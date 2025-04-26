@@ -1,4 +1,3 @@
-import { isObjectIdOrHexString } from "mongoose";
 import User from "../models/User.js";
 import { getConnectedUsers, getIO } from "../socket/socket.server.js";
 
@@ -126,34 +125,64 @@ export const getUserProfiles = async (req, res) => {
 	try {
 		const currentUser = await User.findById(req.user.id);
 
-		const users = await User.find({
-			// exclude current user
-			$and: [
-				{ _id: { $ne: currentUser.id } }, // ne means not equal (so exclude current user)
-				{ _id: { $nin: currentUser.likes } }, // nin means not in (so exclude all the users that are in the likes array)
-				{ _id: { $nin: currentUser.dislikes } }, // nin means not in (so exclude all the users that are in the dislikes array)
-				{ _id: { $nin: currentUser.matches } }, // nin means not in (so exclude all the users that are in the matches array)
-				// find users that match the current user's genderPreference
-				{
-					gender:
-						currentUser.genderPreference === "both"
-							? {
-									$in: ["male", "female"], // if genderPreference is both, show all users
-							  }
-							: currentUser.genderPreference, // else show only the users that match the genderPreference
-				},
-				// makes sure that the other user has the same genderPreference as the current user
-				{ genderPreference: { $in: [currentUser.gender, "both"] } },
-			],
+		// Fetch all potential matches
+		const candidates = await User.find({
+			_id: { $ne: currentUser._id },
+			_id: {
+				$nin: [
+					...currentUser.likes,
+					...currentUser.dislikes,
+					...currentUser.matches,
+				],
+			},
+			gender:
+				currentUser.genderPreference === "both"
+					? { $in: ["male", "female"] }
+					: currentUser.genderPreference,
+			genderPreference: { $in: [currentUser.gender, "both"] },
 		});
 
-		res.status(200).json({
-			success: true,
-			users,
-		});
-	} catch (error) {
-		console.log("Error in getUserProfiles: ", error);
+		// Score each candidate
+		const scored = candidates.map((u) => {
+			const theirs = u.spotify || {};
+			const theirsArtists = theirs.topArtists || [];
+			const theirsTracks = theirs.topTracks || [];
+			const theirsSaved = theirs.savedTracks || [];
 
+			const mineArtists = currentUser.spotify?.topArtists || [];
+			const mineTracks = currentUser.spotify?.topTracks || [];
+			const mineSaved = currentUser.spotify?.savedTracks || [];
+
+			const artistOverlap = theirsArtists.filter((a) =>
+				mineArtists.includes(a)
+			).length;
+
+			const trackOverlap = theirsTracks.filter((t) =>
+				mineTracks.includes(t)
+			).length;
+
+			const savedOverlap = theirsSaved.filter((s) =>
+				mineSaved.includes(s)
+			).length;
+
+			const score = artistOverlap * 3 + trackOverlap * 2 + savedOverlap;
+
+			return { user: u, score };
+		});
+
+		// Sort & filter out zero‐score
+		scored.sort((a, b) => b.score - a.score);
+
+		const matches = scored.map((s) => ({
+			_id: s.user._id,
+			name: s.user.name,
+			image: s.user.image,
+			score: s.score,
+		}));
+
+		res.status(200).json({ success: true, users: matches });
+	} catch (err) {
+		console.error("Error in getUserProfiles:", err);
 		res.status(500).json({
 			success: false,
 			message: "Internal server error",
