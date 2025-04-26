@@ -1,3 +1,4 @@
+import { makeSpotifyClient } from "../utils/spotifyClientFactory.js";
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 
@@ -14,7 +15,15 @@ const signToken = (id) => {
 };
 
 export const signup = async (req, res) => {
-	const { name, email, password, age, gender, genderPreference } = req.body;
+	const {
+		name,
+		email,
+		password,
+		age,
+		gender,
+		genderPreference,
+		spotify: spotifyTokens,
+	} = req.body;
 
 	try {
 		if (!name || !email || !password || !age || !gender || !genderPreference) {
@@ -36,8 +45,7 @@ export const signup = async (req, res) => {
 			});
 		}
 
-		// create user
-		const newUser = await User.create({
+		const user = new User({
 			name,
 			email,
 			password,
@@ -46,8 +54,78 @@ export const signup = async (req, res) => {
 			genderPreference,
 		});
 
+		//------------ Spotify processing ------------
+
+		if (spotifyTokens?.access_token) {
+			// Save Spotify tokens to the user object
+
+			user.spotify.accessToken = spotifyTokens.access_token;
+			user.spotify.refreshToken = spotifyTokens.refresh_token;
+			user.spotify.expiresAt = new Date(
+				Date.now() + spotifyTokens.expires_in * 1000
+			);
+
+			// Fetch Spotify data
+			try {
+				const client = makeSpotifyClient(spotifyTokens);
+
+				// Profile
+				const { body: profile } = await client.getMe();
+				user.spotify.id = profile.id;
+
+				// Top Artists
+				try {
+					const { body: artistsData } = await client.getMyTopArtists({
+						limit: 10,
+					});
+					user.spotify.topArtists = artistsData.items.map((a) => a.id);
+				} catch (err) {
+					console.error("getMyTopArtists failed:", err.body?.error || err);
+				}
+
+				// Top Tracks
+				try {
+					const { body: tracksData } = await client.getMyTopTracks({
+						limit: 10,
+					});
+					user.spotify.topTracks = tracksData.items.map((t) => t.id);
+				} catch (err) {
+					console.error("getMyTopTracks failed:", err.body?.error || err);
+				}
+
+				// Saved Tracks
+				try {
+					const { body: savedData } = await client.getMySavedTracks({
+						limit: 10,
+					});
+					user.spotify.savedTracks = savedData.items.map((i) => i.track.id);
+				} catch (err) {
+					console.error("getMySavedTracks failed:", err.body?.error || err);
+				}
+
+				// Followed Artists
+				try {
+					const { body: followData } = await client.getFollowedArtists({
+						limit: 10,
+					});
+					user.spotify.followedArtists = followData.artists.items.map(
+						(a) => a.id
+					);
+				} catch (err) {
+					console.error("getFollowedArtists failed:", err.body?.error || err);
+				}
+			} catch (err) {
+				console.error(
+					"Overall Spotify data fetch failed:",
+					err.body?.error || err
+				);
+			}
+		}
+
+		await user.save();
+
 		// Sign a JWT token with the new user's ID
-		const token = signToken(newUser._id);
+		const token = signToken(user._id);
 
 		// Set the JWT token as an HTTP-only cookie
 		res.cookie("jwt", token, {
@@ -59,7 +137,7 @@ export const signup = async (req, res) => {
 
 		res.status(201).json({
 			success: true,
-			user: newUser,
+			user: user,
 		});
 	} catch (error) {
 		console.log("Error in signup controller:", error);

@@ -8,8 +8,15 @@ export const spotifyLogin = (req, res) => {
 
 	pendingStates.add(state); // Store the state for verification
 
-	const scopes = ["user-read-private", "user-read-email", "user-top-read"];
-	const authorizeURL = spotifyApi.createAuthorizeURL(scopes, state);
+	const scopes = [
+		"user-read-private",
+		"user-read-email",
+		"user-top-read",
+		"user-library-read",
+		"user-follow-read",
+	];
+
+	const authorizeURL = spotifyApi.createAuthorizeURL(scopes, state, true);
 
 	res.json({ url: authorizeURL }); // Send the URL to the client
 };

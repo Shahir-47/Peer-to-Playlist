@@ -56,6 +56,17 @@ const userSchema = new mongoose.Schema(
 				ref: "User",
 			},
 		],
+		spotify: {
+			id: { type: String, default: "" },
+			accessToken: { type: String, default: "" },
+			refreshToken: { type: String, default: "" },
+			expiresAt: { type: Date, default: null },
+
+			topArtists: { type: [String], default: [] },
+			topTracks: { type: [String], default: [] },
+			savedTracks: { type: [String], default: [] },
+			followedArtists: { type: [String], default: [] },
+		},
 	},
 	{ timestamps: true }
 ); // The timestamps option automatically adds createdAt and updatedAt fields to the schema.
@@ -63,6 +74,10 @@ const userSchema = new mongoose.Schema(
 // Anytime you do something like new User({...}).save(), this function runs right before the data is stored in the database.
 // We use it here to hash the user's password before saving it, so we never store plain text passwords.
 userSchema.pre("save", async function (next) {
+	if (!this.isModified("password")) {
+		return next();
+	}
+
 	this.password = await bcrypt.hash(this.password, 10);
 	next(); // Tells Mongoose to proceed with saving the document in the database after hashing the password.
 });

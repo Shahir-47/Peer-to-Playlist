@@ -347,7 +347,7 @@ const SignUpForm = () => {
 				<button
 					type="button"
 					onClick={connectSpotify}
-					className="w-full flex items-center justify-center py-2 px-4 rounded shadow-sm bg-green-600 hover:bg-green-700"
+					className="w-full flex items-center justify-center py-2 px-4 rounded shadow-sm bg-green-600 hover:bg-green-700 cursor-pointer"
 				>
 					<FaSpotify className="h-5 w-5 mr-2" />
 					Connect with Spotify
