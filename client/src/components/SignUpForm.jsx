@@ -1,20 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { FaSpotify } from "react-icons/fa";
 import { useAuthStore } from "../store/useAuthStore";
 import toast from "react-hot-toast";
 import { Eye, EyeOff } from "lucide-react";
+import { axiosInstance } from "../lib/axios";
 
 const SignUpForm = () => {
 	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
 	const [emailValid, setEmailValid] = useState(true);
 	const [password, setPassword] = useState("");
-	const [gender, setGender] = useState("");
 	const [age, setAge] = useState("");
 	const [ageValid, setAgeValid] = useState(true);
-	const [genderPreference, setGenderPreference] = useState("");
+	const [image, setImage] = useState(null);
+	const fileInputRef = useRef(null);
 
 	const [passwordFeedback, setPasswordFeedback] = useState([]);
 	const [showPassword, setShowPassword] = useState(false);
+	const [spotifyUrl, setSpotifyUrl] = useState("");
+	const [spotifyTokens, setSpotifyTokens] = useState(null);
+	const popupRef = useRef(null);
 
 	const { signup, loading } = useAuthStore(); // get signup function and loading state from the auth store file
 
@@ -37,6 +42,48 @@ const SignUpForm = () => {
 		return feedback;
 	};
 
+	const connectSpotify = () => {
+		popupRef.current = window.open(
+			spotifyUrl,
+			"SpotifyLogin",
+			"width=500,height=600"
+		);
+	};
+
+	const handleImageChange = (e) => {
+		const file = e.target.files[0];
+		if (!file) return;
+		const reader = new FileReader();
+		reader.onloadend = () => setImage(reader.result);
+		reader.readAsDataURL(file);
+	};
+
+	useEffect(() => {
+		axiosInstance
+			.get("/auth/spotify/login")
+			.then((res) => {
+				setSpotifyUrl(res.data.url);
+			})
+			.catch((err) => {
+				console.error("Spotify login axios failed:", err);
+				toast.error("Could not fetch Spotify URL");
+			});
+	}, []);
+
+	useEffect(() => {
+		const handleMessage = (e) => {
+			const allowed = [window.location.origin, "http://127.0.0.1:5000"];
+
+			if (!allowed.includes(e.origin)) return;
+
+			if (e.data?.type === "spotify") {
+				setSpotifyTokens(e.data.payload);
+			}
+		};
+		window.addEventListener("message", handleMessage);
+		return () => window.removeEventListener("message", handleMessage);
+	}, []);
+
 	return (
 		<form
 			className="space-y-6"
@@ -51,9 +98,9 @@ const SignUpForm = () => {
 					name,
 					email,
 					password,
-					gender,
 					age,
-					genderPreference,
+					spotify: spotifyTokens,
+					image,
 				}); // Call the signup function from the auth store with the form data
 				// The signup function will handle the API call and update the loading state
 			}}
@@ -204,102 +251,55 @@ const SignUpForm = () => {
 				)}
 			</div>
 
-			{/* GENDER */}
-			<div>
-				<label className="block text-sm font-medium text-gray-700">
-					Your Gender
-				</label>
-				<div className="mt-2 flex gap-2">
-					<div className="flex items-center">
-						<input
-							id="male"
-							name="gender"
-							type="checkbox"
-							checked={gender === "male"} // Checkbox is checked when the selected gender state is "male"
-							onChange={() => setGender("male")}
-							className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
-						/>
-						<label htmlFor="male" className="ml-2 block text-sm text-gray-900">
-							Male
-						</label>
-					</div>
-					<div className="flex items-center">
-						<input
-							id="female"
-							name="gender"
-							type="checkbox"
-							checked={gender === "female"} // Checkbox is checked when the selected gender state is "female"
-							onChange={() => setGender("female")}
-							className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
-						/>
-						<label
-							htmlFor="female"
-							className="ml-2 block text-sm text-gray-900"
-						>
-							Female
-						</label>
-					</div>
+			{/* SPOTIFY CONNECT BUTTON */}
+			{!spotifyTokens ? (
+				<button
+					type="button"
+					onClick={connectSpotify}
+					className="w-full flex items-center justify-center py-2 px-4 rounded shadow-sm bg-green-600 hover:bg-green-700 cursor-pointer"
+				>
+					<FaSpotify className="h-5 w-5 mr-2" />
+					Connect with Spotify
+				</button>
+			) : (
+				<div className="flex items-center p-2 bg-green-100 rounded">
+					<FaSpotify className="h-8 w-8 text-green-600 mr-4 " />
+					<p className="text-green-800">
+						Spotify connected! Now we can match you with music lovers.
+					</p>
 				</div>
-			</div>
+			)}
 
-			{/* GENDER PREFERENCE */}
+			{/* PROFILE PICTURE */}
 			<div>
 				<label className="block text-sm font-medium text-gray-700">
-					Prefer Me
+					Profile Picture
 				</label>
-				<div className="mt-2 space-y-2">
-					<div className="flex items-center">
-						<input
-							id="prefer-male"
-							name="gender-preference"
-							type="radio"
-							value="male"
-							checked={genderPreference === "male"} // Radio button is selected when genderPreference state is "male"
-							onChange={(e) => setGenderPreference(e.target.value)}
-							className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300"
-						/>
-						<label
-							htmlFor="prefer-male"
-							className="ml-2 block text-sm text-gray-900"
-						>
-							Male
-						</label>
-					</div>
-					<div className="flex items-center">
-						<input
-							id="prefer-female"
-							name="gender-preference"
-							type="radio"
-							value="female"
-							checked={genderPreference === "female"} // Radio button is selected when genderPreference state is "female"
-							onChange={(e) => setGenderPreference(e.target.value)}
-							className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300"
-						/>
-						<label
-							htmlFor="prefer-female"
-							className="ml-2 block text-sm text-gray-900"
-						>
-							Female
-						</label>
-					</div>
-					<div className="flex items-center">
-						<input
-							id="prefer-both"
-							name="gender-preference"
-							type="radio"
-							value="both"
-							checked={genderPreference === "both"} // Radio button is selected when genderPreference state is "both"
-							onChange={(e) => setGenderPreference(e.target.value)}
-							className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300"
-						/>
-						<label
-							htmlFor="prefer-both"
-							className="ml-2 block text-sm text-gray-900"
-						>
-							Both
-						</label>
-					</div>
+				<div className="mt-1 flex items-center">
+					<button
+						type="button"
+						onClick={() => fileInputRef.current.click()}
+						className="px-4 py-2 border rounded-md text-sm bg-white hover:bg-pink-50"
+					>
+						Upload Image
+					</button>
+					<input
+						ref={fileInputRef}
+						type="file"
+						accept="image/*"
+						className="hidden"
+						onChange={handleImageChange}
+					/>
 				</div>
+				{image && (
+					<div className="mt-2">
+						<img
+							src={image}
+							alt="Preview"
+							className="w-24 h-24 object-cover rounded-md border"
+						/>
+					</div>
+				)}
 			</div>
 
 			{/* SIGN UP BUTTON */}

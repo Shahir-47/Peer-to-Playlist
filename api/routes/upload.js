@@ -34,10 +34,14 @@ router.post("/s3/presign", protectedRoute, async (req, res) => {
 });
 
 router.post("/s3/presign-download", protectedRoute, async (req, res) => {
-	const { key } = req.body;
+	const { key, expiresIn } = req.body;
 	if (!key) {
 		return res.status(400).json({ error: "key required" });
 	}
+
+	// if expiresIn is not a number, default to 60 seconds
+	// if expiresIn is greater than 900 seconds, set it to 900 seconds
+	const safeExpiresIn = Math.min(Number(expiresIn) || 60, 900);
 
 	try {
 		// generate a presigned GET URL
@@ -45,7 +49,9 @@ router.post("/s3/presign-download", protectedRoute, async (req, res) => {
 			Bucket: process.env.AWS_S3_BUCKET,
 			Key: key,
 		});
-		const url = await getSignedUrl(s3, getCommand, { expiresIn: 60 });
+		const url = await getSignedUrl(s3, getCommand, {
+			expiresIn: safeExpiresIn,
+		});
 
 		return res.json({ url });
 	} catch (err) {

@@ -4,7 +4,12 @@ import { getConnectedUsers, getIO } from "../socket/socket.server.js";
 
 export const sendMessage = async (req, res) => {
 	try {
-		const { content, receiverId, attachments = [] } = req.body;
+		const {
+			content,
+			receiverId,
+			attachments = [],
+			previewUrls = [],
+		} = req.body;
 
 		const savedAttachments = [];
 		for (const att of attachments) {
@@ -37,6 +42,7 @@ export const sendMessage = async (req, res) => {
 			receiver: receiverId,
 			content,
 			attachments: savedAttachments,
+			linkPreviews: previewUrls,
 		});
 
 		// Get Socket.IO instance and connected users map
@@ -48,10 +54,7 @@ export const sendMessage = async (req, res) => {
 
 		// If the receiver is connected, emit a "newMessage" event in real-time
 		if (receiverSocketId) {
-			io.to(receiverSocketId).emit("newMessage", {
-				message: newMessage,
-				senderId: req.user.id,
-			});
+			io.to(receiverSocketId).emit("newMessage", newMessage);
 		}
 
 		res.status(201).json({
@@ -76,7 +79,7 @@ export const sendPublicKeys = async(req,res) => {
 	const userId = req.user.id;
 
 	//sieve of Eratosthenes 
-	//code from https://stackoverflow.com/questions/61700358/generating-random-prime-number
+	//code modified from https://stackoverflow.com/questions/61700358/generating-random-prime-number
 	const getPrimes = (min, max) => {
 		const result = Array(max + 1)
 		  .fill(0)
@@ -101,22 +104,23 @@ export const sendPublicKeys = async(req,res) => {
 		return primes[getRandNum(0, primes.length - 1)];
 	  };
 
-	  // Create a new message in the DB with sender, receiver, and content
-		const newMessage = await Message.create({
-			sender: req.user.id,
-			receiver: receiverId,
-			content: getRandPrime1, getRandPrime2,
-			attachments: savedAttachments,
-		});
+	  const publicKey1 = getRandPrime1(100,10000000);
+	  const publicKey2 = getRandPrime1(100,10000000);
+	  while (publicKey2 = publicKey1){
+		const publicKey2 = getRandPrime1(100,10000000);
+	  }
+
+	  const publicKeys = [publicKey1,publicKey2];
+
 	if (receiverSocketId) {
-		io.to(receiverSocketId).emit("newMessage", {
-			message: newMessage,
+		io.to(receiverSocketId).emit("newKeys", {
+			message: publicKeys,
 			senderId: req.user.id,
 		});
 	}
 	res.status(201).json({
 		success: true,
-		message: newMessage,
+		message: publicKeys,
 	});}
 	catch (error){
 		console.log("Error in sendMessage: ", error);

@@ -8,20 +8,7 @@ export const useMessageStore = create((set) => ({
 	messages: [], // List of all messages in the current conversation
 	loading: true, // Tracks loading state while fetching messages
 
-	getPublicKeys : async (userId) => {
-		try {
-			set({ loading: true });
-			const res = await axiosInstance.get(`/messages/conversation/${userId}`);
-			set({ messages: res.data.messages });
-		} catch (error) {
-			console.log(error);
-			set({ messages: [] });
-		} finally {
-			set({ loading: false });
-		}
-	},
-
-	sendMessage: async (receiverId, content, attachments) => {
+	sendMessage: async (receiverId, content, attachments, previewUrls = []) => {
 		try {
 			// show message in chat
 			set((state) => ({
@@ -33,6 +20,8 @@ export const useMessageStore = create((set) => ({
 						receiver: receiverId,
 						content,
 						attachments,
+						linkPreviews: previewUrls,
+						createdAt: new Date().toISOString(),
 					},
 				],
 			}));
@@ -42,6 +31,7 @@ export const useMessageStore = create((set) => ({
 				receiverId,
 				content,
 				attachments,
+				previewUrls,
 			});
 		} catch (error) {
 			toast.error(error.response.data.message || "Something went wrong");
@@ -62,16 +52,24 @@ export const useMessageStore = create((set) => ({
 
 	//these two make it real time
 	subscribeToMessages: () => {
-		const socket = getSocket();
-
-		// When "newMessage" is received, append to chat in real-time
-		socket.on("newMessage", ({ message }) => {
-			set((state) => ({ messages: [...state.messages, message] }));
-		});
+		try {
+			const socket = getSocket();
+			socket.on("newMessage", (message) => {
+				set((state) => ({
+					messages: [...state.messages, message],
+				}));
+			});
+		} catch (error) {
+			console.log("Error subscribing to messages: ", error);
+		}
 	},
 
 	unsubscribeFromMessages: () => {
-		const socket = getSocket();
-		socket.off("newMessage"); // Remove the listener
+		try {
+			const socket = getSocket();
+			socket.off("newMessage");
+		} catch (error) {
+			console.log("Error unsubscribing from messages: ", error);
+		}
 	},
 }));

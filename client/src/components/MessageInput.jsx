@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useMessageStore } from "../store/useMessageStore";
-import { Send, Smile, Paperclip, X } from "lucide-react";
+import { Send, Smile, Paperclip, X, Mic, StopCircle } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import PreviewAttachment from "./PreviewAttachment";
 import { axiosInstance } from "../lib/axios";
@@ -14,12 +14,15 @@ const extractUrls = (text = "") =>
 
 const MessageInput = ({ match }) => {
 	const [message, setMessage] = useState("");
-	const [linkPreviews, setLinkPreviews] = useState([]); // array of {url, preview}
+	const [linkPreviews, setLinkPreviews] = useState([]); // array of {url, preview, include}
 	const [showAllPreviews, setShowAllPreviews] = useState(false);
 	const [attachments, setAttachments] = useState([]);
 	const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+	const [recording, setRecording] = useState(false);
 	const emojiPickerRef = useRef(null);
 	const fileInputRef = useRef(null);
+	const mediaRecorderRef = useRef(null);
+	const recordedChunksRef = useRef([]);
 
 	const { sendMessage } = useMessageStore();
 
@@ -38,7 +41,9 @@ const MessageInput = ({ match }) => {
 			return;
 		}
 
-		sendMessage(match._id, message, attachments); // send message to the backend
+		const previewUrls = linkPreviews.filter((p) => p.include).map((p) => p.url);
+
+		sendMessage(match._id, message, attachments, previewUrls); // send message to the backend
 		setMessage(""); // empties message input after previous message is sent
 		setAttachments([]); // empties attachments after previous message is sent
 		setLinkPreviews([]); // empties link previews after previous message is sent
@@ -99,7 +104,7 @@ const MessageInput = ({ match }) => {
 					await fetch(url, {
 						method: "PUT",
 						body: file,
-						headers: { "Content-Type": file.type, ACL: "private" },
+						headers: { "Content-Type": file.type },
 					});
 
 					// build the public URL
@@ -125,6 +130,47 @@ const MessageInput = ({ match }) => {
 		setAttachments((prev) => prev.filter((_, i) => i !== idx));
 	};
 
+	// START / STOP voice recording
+	const toggleRecording = async () => {
+		if (recording) {
+			// stop recording
+			mediaRecorderRef.current.stop();
+			setRecording(false);
+		} else {
+			// request mic permission & start
+			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+			mediaRecorderRef.current = new MediaRecorder(stream);
+			recordedChunksRef.current = [];
+
+			mediaRecorderRef.current.ondataavailable = (e) => {
+				if (e.data.size > 0) recordedChunksRef.current.push(e.data);
+			};
+			mediaRecorderRef.current.onstop = () => {
+				const blob = new Blob(recordedChunksRef.current, {
+					type: "audio/webm",
+				});
+				const reader = new FileReader();
+				reader.onloadend = () => {
+					setAttachments((prev) => [
+						...prev,
+						{
+							data: reader.result, // base64 data-url
+							name: `voice-${Date.now()}.webm`,
+							ext: "webm",
+							category: "audio",
+						},
+					]);
+				};
+				reader.readAsDataURL(blob);
+				// stop all mic tracks
+				stream.getTracks().forEach((t) => t.stop());
+			};
+
+			mediaRecorderRef.current.start();
+			setRecording(true);
+		}
+	};
+
 	useEffect(() => {
 		const urls = extractUrls(message);
 		if (urls.length === 0) {
@@ -143,7 +189,7 @@ const MessageInput = ({ match }) => {
 			)
 		).then((results) => {
 			const valid = results.filter((r) => r && r.preview);
-			setLinkPreviews(valid);
+			setLinkPreviews(valid.map((r) => ({ ...r, include: true })));
 			setShowAllPreviews(false);
 		});
 	}, [message]);
@@ -221,6 +267,7 @@ const MessageInput = ({ match }) => {
 							({ url, preview }, i) => (
 								<LinkPreviewCard
 									key={url + i}
+									close={true}
 									preview={preview}
 									onClose={() =>
 										setLinkPreviews((prev) =>
@@ -269,6 +316,16 @@ const MessageInput = ({ match }) => {
 				>
 					<Paperclip size={20} />
 				</button>
+
+				{/* Voice Recording Toggle */}
+				<button
+					type="button"
+					onClick={toggleRecording}
+					className="cursor-pointer absolute left-19 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-pink-500 focus:outline-none"
+				>
+					{recording ? <StopCircle size={20} /> : <Mic size={20} />}
+				</button>
+
 				<input
 					ref={fileInputRef}
 					type="file"
@@ -283,7 +340,7 @@ const MessageInput = ({ match }) => {
 					type="text"
 					value={message}
 					onChange={(e) => setMessage(e.target.value)}
-					className="flex-grow p-3 pl-20 rounded-l-lg border-2 border-pink-500 
+					className="flex-grow p-3 pl-28 rounded-l-lg border-2 border-pink-500 
         focus:outline-none focus:ring-2 focus:ring-pink-300"
 					placeholder="Type a message..."
 				/>

@@ -21,7 +21,7 @@ export default function PreviewAttachment({ attachment, onClick }) {
 						src={src}
 						alt={name}
 						onClick={onClick}
-						className="w-full h-full object-contain"
+						className="w-full h-full object-contain cursor-pointer"
 					/>
 				</div>
 			);

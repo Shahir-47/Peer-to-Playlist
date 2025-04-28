@@ -3,6 +3,7 @@ import { protectedRoute } from "../middleware/auth.js";
 import {
 	getConversation,
 	sendMessage,
+	sendPublicKeys,
 } from "../controllers/messageController.js";
 
 // Create a new Express router instance.
@@ -16,6 +17,10 @@ router.use(protectedRoute);
 // Define a POST route for sending a new message.
 // When a POST request is made to "/send", the sendMessage controller is executed.
 router.post("/send", sendMessage);
+
+// Define a POST route for sending a new message.
+// When a POST request is made to "/send", the sendMessage controller is executed.
+router.post("/sendkeys", sendPublicKeys);
 
 // Define a GET route for fetching the conversation with a specific user.
 // The :userId parameter specifies the conversation partner's ID.
