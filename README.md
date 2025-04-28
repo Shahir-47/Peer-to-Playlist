@@ -1,8 +1,4 @@
-# Peer-to-Playlist: Comprehensive System Architecture
-
-## Table of Contents
-
-Here's the updated table of contents that includes your new sections:
+# Peer-to-Playlist
 
 ## Table of Contents
 
