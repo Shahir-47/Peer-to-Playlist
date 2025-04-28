@@ -2,6 +2,7 @@ import { makeSpotifyClient } from "../utils/spotifyClientFactory.js";
 import { getIO } from "../socket/socket.server.js";
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
+import cloudinary from "cloudinary";
 
 /**
  * Function to sign a JWT token.
@@ -16,7 +17,14 @@ const signToken = (id) => {
 };
 
 export const signup = async (req, res) => {
-	const { name, email, password, age, spotify: spotifyTokens } = req.body;
+	const {
+		name,
+		email,
+		password,
+		age,
+		spotify: spotifyTokens,
+		image,
+	} = req.body;
 
 	try {
 		if (!name || !email || !password || !age) {
@@ -44,6 +52,20 @@ export const signup = async (req, res) => {
 			password,
 			age,
 		});
+
+		// If an image is provided, save it to the user object
+		if (image && image.startsWith("data:image")) {
+			try {
+				const uploadResult = await cloudinary.uploader.upload(image);
+				user.image = uploadResult.secure_url;
+			} catch (err) {
+				console.error("Cloudinary upload error:", err);
+				return res.status(400).json({
+					success: false,
+					message: "Failed to upload profile picture",
+				});
+			}
+		}
 
 		//------------ Spotify processing ------------
 
