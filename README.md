@@ -7,6 +7,13 @@ Here's the updated table of contents that includes your new sections:
 ## Table of Contents
 
 - [Introduction](#introduction)
+- [Live Deployment](#live-deployment)
+- [Screenshots](#screenshots)
+- [Installation and Setup](#installation-and-setup)
+  - [Server Side (Backend)](#server-side-backend)
+  - [Client Side (Frontend)](#client-side-frontend)
+  - [Environment Variables](#environment-variables)
+- [Directory Structure](#directory-structure)
 - [System Overview](#system-overview)
 - [Core Technologies](#core-technologies)
 - [Authentication Workflows](#authentication-workflows)
@@ -124,6 +131,90 @@ AWS_S3_BUCKET=<s3_bucket_name>
 SPOTIFY_CLIENT_ID=<spotify_client_id>
 SPOTIFY_CLIENT_SECRET=<spotify_client_secret>
 SPOTIFY_REDIRECT_URI=http://localhost:5000/api/auth/spotify/callback
+```
+
+### Directory Structure
+
+```plaintext
+Directory structure:
+└── peer-to-playlist/
+    ├── README.md
+    ├── LICENSE
+    ├── package.json
+    ├── api/
+    │   ├── server.js
+    │   ├── config/
+    │   │   ├── cloudinary.js
+    │   │   ├── db.js
+    │   │   ├── s3.js
+    │   │   └── spotify.js
+    │   ├── controllers/
+    │   │   ├── authController.js
+    │   │   ├── matchController.js
+    │   │   ├── messageController.js
+    │   │   ├── spotifyController.js
+    │   │   └── userController.js
+    │   ├── middleware/
+    │   │   └── auth.js
+    │   ├── models/
+    │   │   ├── Attachment.js
+    │   │   ├── Message.js
+    │   │   └── User.js
+    │   ├── routes/
+    │   │   ├── authRoutes.js
+    │   │   ├── linkPreview.js
+    │   │   ├── matchRoutes.js
+    │   │   ├── messageRoutes.js
+    │   │   ├── spotifyRoutes.js
+    │   │   ├── upload.js
+    │   │   └── userRoutes.js
+    │   ├── seeds/
+    │   │   └── user.js
+    │   ├── socket/
+    │   │   └── socket.server.js
+    │   └── utils/
+    │       └── spotifyClientFactory.js
+    └── client/
+        ├── README.md
+        ├── eslint.config.js
+        ├── index.html
+        ├── package-lock.json
+        ├── package.json
+        ├── vite.config.js
+        ├── .gitignore
+        ├── public/
+        │   ├── female/
+        │   └── male/
+        └── src/
+            ├── App.jsx
+            ├── index.css
+            ├── main.jsx
+            ├── components/
+            │   ├── Header.jsx
+            │   ├── LinkPreviewCard.jsx
+            │   ├── LoginForm.jsx
+            │   ├── MessageInput.jsx
+            │   ├── PreviewAttachment.jsx
+            │   ├── SharedChipsWithModal.jsx
+            │   ├── Sidebar.jsx
+            │   ├── SignUpForm.jsx
+            │   ├── SwipeArea.jsx
+            │   ├── SwipeFeedback.jsx
+            │   └── ViewAttachmentModal.jsx
+            ├── lib/
+            │   └── axios.js
+            ├── pages/
+            │   ├── AuthPage.jsx
+            │   ├── ChatPage.jsx
+            │   ├── HomePage.jsx
+            │   └── ProfilePage.jsx
+            ├── socket/
+            │   └── socket.client.js
+            └── store/
+                ├── useAuthStore.js
+                ├── useMatchStore.js
+                ├── useMessageStore.js
+                └── useUserStore.js
 ```
 
 ## System Overview
@@ -1734,6 +1825,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 - [React Doc Viewer](https://github.com/cyntler/react-doc-viewer) - Document viewing
 - [React File Viewer](https://github.com/plangrid/react-file-viewer) - File preview
 - [React Masonry CSS](https://github.com/paulcollett/react-masonry-css) - Grid layout
+- [Office Online Viewer](https://products.office.com/en-us/office-online/viewer) - Office document viewing
 
 ### Real-time Features
 
@@ -1744,12 +1836,14 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 - [Framer Motion](https://www.framer.com/motion/) - Animation library
 - [React Spring](https://www.react-spring.dev/) - Physics-based animations
+- [React Transition Group](https://reactcommunity.org/react-transition-group/) - Transition animations
 
 ### Development Tools
 
 - [Vite](https://vitejs.dev/guide/) - Frontend build tool
 - [ESLint](https://eslint.org/docs/latest/) - Code linting
 - [Nodemon](https://github.com/remy/nodemon) - Server auto-restart during development
+- [Prettier](https://prettier.io/docs/en/index.html) - Code formatting
 
 ### Utilities
 
@@ -1759,3 +1853,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 - [link-preview-js](https://github.com/ospfranco/link-preview-js) - URL preview generation
 - [Cookie Parser](https://www.npmjs.com/package/cookie-parser) - HTTP cookie parsing
 - [CORS](https://www.npmjs.com/package/cors) - Cross-Origin Resource Sharing middleware
+- [Mongoose](https://mongoosejs.com/docs/) - MongoDB object modeling
