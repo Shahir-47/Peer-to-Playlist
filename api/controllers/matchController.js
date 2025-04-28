@@ -132,27 +132,106 @@ export const swipeLeft = async (req, res) => {
 
 export const getMatches = async (req, res) => {
 	try {
-		// Get the current user's document from the database using their ID.
-		// The 'matches' field contains references (ObjectIds) to other users document — similar to foreign keys in SQL.
-		// Using populate(), we replace those ObjectIds with the actual user data they point to,
-		// selecting only each matched user's 'name' and 'image' (plus '_id', which is included by default).
-		// In the end, 'user.matches' will be an array of user objects with: { _id, name, image }.
-		const user = await User.findById(req.user.id).populate(
-			"matches",
-			"name image"
+		// load current user
+		const currentUser = await User.findById(req.user.id);
+		const client = await makeSpotifyClient(
+			currentUser.spotify,
+			currentUser._id
 		);
 
-		res.status(200).json({
-			success: true,
-			matches: user.matches,
-		});
-	} catch (error) {
-		console.log("Error in getMatches: ", error);
+		// fetch full User docs for each matched ID
+		const matchedUsers = await User.find({ _id: { $in: currentUser.matches } });
 
-		res.status(500).json({
-			success: false,
-			message: "Internal server error",
+		// collect IDs for batch name lookup
+		const allArtistIds = new Set();
+		const allTrackIds = new Set();
+
+		// compute overlaps & score
+		const scored = matchedUsers.map((other) => {
+			const mine = currentUser.spotify || {};
+			const theirs = other.spotify || {};
+
+			const commonArtists = (theirs.topArtists || []).filter((id) =>
+				(mine.topArtists || []).includes(id)
+			);
+			const commonTracks = (theirs.topTracks || []).filter((id) =>
+				(mine.topTracks || []).includes(id)
+			);
+			const commonSaved = (theirs.savedTracks || []).filter((id) =>
+				(mine.savedTracks || []).includes(id)
+			);
+			const commonFollowed = (theirs.followedArtists || []).filter((id) =>
+				(mine.followedArtists || []).includes(id)
+			);
+
+			commonArtists.forEach((id) => allArtistIds.add(id));
+			commonTracks.forEach((id) => allTrackIds.add(id));
+			commonSaved.forEach((id) => allTrackIds.add(id));
+			commonFollowed.forEach((id) => allArtistIds.add(id));
+
+			const score =
+				commonArtists.length * 3 +
+				commonTracks.length * 2 +
+				commonSaved.length * 1 +
+				commonFollowed.length * 1;
+
+			return {
+				other,
+				score,
+				commonArtists,
+				commonTracks,
+				commonSaved,
+				commonFollowed,
+			};
 		});
+
+		// fetch human names in bulk
+		await fetchArtistNames(client, [...allArtistIds]);
+		await fetchTrackNames(client, [...allTrackIds]);
+
+		// sort by score descending
+		scored.sort((a, b) => b.score - a.score);
+
+		// build payload
+		const matches = scored.map(
+			({
+				other,
+				score,
+				commonArtists,
+				commonTracks,
+				commonSaved,
+				commonFollowed,
+			}) => ({
+				_id: other._id,
+				name: other.name,
+				image: other.image,
+				age: other.age,
+				bio: other.bio,
+				commonArtists: commonArtists.map((id) => ({
+					id,
+					name: spotifyNameCache.artists.get(id),
+				})),
+				commonTracks: commonTracks.map((id) => ({
+					id,
+					name: spotifyNameCache.tracks.get(id),
+				})),
+				commonSaved: commonSaved.map((id) => ({
+					id,
+					name: spotifyNameCache.tracks.get(id),
+				})),
+				commonFollowed: commonFollowed.map((id) => ({
+					id,
+					name: spotifyNameCache.artists.get(id),
+				})),
+			})
+		);
+
+		return res.status(200).json({ success: true, matches });
+	} catch (err) {
+		console.error("Error in getMatches:", err);
+		return res
+			.status(500)
+			.json({ success: false, message: "Internal server error" });
 	}
 };
 

@@ -20,8 +20,10 @@ const masonryBreakpoints = {
 
 const ChatPage = () => {
 	const { getMyMatches, matches, isLoadingMyMatches } = useMatchStore();
+
 	const {
 		messages,
+		sendMessage,
 		getMessages,
 		subscribeToMessages,
 		unsubscribeFromMessages,
@@ -38,6 +40,13 @@ const ChatPage = () => {
 	// Find the matched user from the matches array
 	// This is used to display the match's name and image in the chat header
 	const match = matches.find((m) => m?._id === id);
+
+	// filter out Kanye / Dexter from any list
+	const filterBad = (arr = []) =>
+		arr.filter((it) => {
+			const n = it.name.toLowerCase();
+			return n !== "kanye west" && !n.includes("dexter");
+		});
 
 	// Handle opening the attachment modal
 	const handleViewAttachmentClick = (attachment) => {
@@ -120,9 +129,99 @@ const ChatPage = () => {
 				>
 					{/* No messages yet */}
 					{messages.length === 0 ? (
-						<p className="text-center text-gray-500 py-8">
-							Start your conversation with {match.name}
-						</p>
+						<div className="text-center text-gray-600 py-8 space-y-4">
+							<p className="text-lg">
+								You both love{" "}
+								<span className="font-semibold">
+									{filterBad(match.commonArtists)
+										.map((a) => a.name)
+										.join(", ") || "music"}
+								</span>
+								—break the ice!
+							</p>
+
+							<div className="inline-grid grid-cols-1 gap-2 sm:grid-cols-2">
+								{/* 1) Ask about a shared artist */}
+								{filterBad(match.commonArtists)
+									.slice(0, 2)
+									.map((a, i) => (
+										<button
+											key={`artist-${i}`}
+											onClick={() =>
+												sendMessage(
+													match._id,
+													`What’s your favorite song by ${a.name}?`,
+													[],
+													[]
+												)
+											}
+											className="px-4 py-2 bg-pink-100 hover:bg-pink-200 rounded-full text-sm transition"
+										>
+											Ask about {a.name}
+										</button>
+									))}
+
+								{/* 2) Ask about a shared track */}
+								{filterBad(match.commonTracks)
+									.slice(0, 2)
+									.map((t, i) => (
+										<button
+											key={`track-${i}`}
+											onClick={() =>
+												sendMessage(
+													match._id,
+													`I loved "${t.name}". What do you think of it?`,
+													[],
+													[]
+												)
+											}
+											className="px-4 py-2 bg-blue-100 hover:bg-blue-200 rounded-full text-sm transition"
+										>
+											Talk about "{t.name}"
+										</button>
+									))}
+
+								{/* 3) Ask about a saved track */}
+								{filterBad(match.commonSaved)
+									.slice(0, 2)
+									.map((s, i) => (
+										<button
+											key={`saved-${i}`}
+											onClick={() =>
+												sendMessage(
+													match._id,
+													`We both saved "${s.name}". Why did you save it?`,
+													[],
+													[]
+												)
+											}
+											className="px-4 py-2 bg-green-100 hover:bg-green-200 rounded-full text-sm transition"
+										>
+											Why save "{s.name}"?
+										</button>
+									))}
+
+								{/* 4) Ask about a followed artist */}
+								{filterBad(match.commonFollowed)
+									.slice(0, 2)
+									.map((f, i) => (
+										<button
+											key={`followed-${i}`}
+											onClick={() =>
+												sendMessage(
+													match._id,
+													`You're following ${f.name}—any song recs?`,
+													[],
+													[]
+												)
+											}
+											className="px-4 py-2 bg-purple-100 hover:bg-purple-200 rounded-full text-sm transition"
+										>
+											Recommend from {f.name}
+										</button>
+									))}
+							</div>
+						</div>
 					) : (
 						<>
 							{
