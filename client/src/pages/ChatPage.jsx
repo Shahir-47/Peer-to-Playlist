@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { ArrowRight } from "lucide-react";
 import { Header } from "../components/Header";
 import { useAuthStore } from "../store/useAuthStore";
 import { useMatchStore } from "../store/useMatchStore";
@@ -18,15 +19,25 @@ const masonryBreakpoints = {
 	480: 1, // <480px → 1 col
 };
 
+// filter out Kanye / Dexter from any list
+const filterBad = (arr = []) =>
+	arr.filter((it) => {
+		const n = it.name.toLowerCase();
+		return n !== "kanye west" && !n.includes("dexter");
+	});
+
 const ChatPage = () => {
 	const { getMyMatches, matches, isLoadingMyMatches } = useMatchStore();
+
 	const {
 		messages,
+		sendMessage,
 		getMessages,
 		subscribeToMessages,
 		unsubscribeFromMessages,
 	} = useMessageStore();
 	const { authUser } = useAuthStore();
+	const [trackIndex, setTrackIndex] = useState(0);
 	const [viewAttachment, setViewAttachment] = useState(null);
 	const [linkPreviewMap, setLinkPreviewMap] = useState({}); // message._id -> [{ url, preview }]
 
@@ -100,6 +111,8 @@ const ChatPage = () => {
 	if (isLoadingMyMatches) return <LoadingMessagesUI />;
 	if (!match) return <MatchNotFound />;
 
+	const tracks = filterBad(match.commonTracks);
+
 	return (
 		//UI stuff
 		<div className="flex flex-col h-screen bg-gray-100 bg-opacity-50">
@@ -112,6 +125,41 @@ const ChatPage = () => {
 						className="w-12 h-12 object-cover rounded-full mr-3 border-2 border-pink-300"
 					/>
 					<h2 className="text-xl font-semibold text-gray-800">{match.name}</h2>
+
+					{tracks.length > 0 && (
+						<div className="ml-auto flex items-center space-x-2">
+							{/* Previous Button */}
+							<button
+								onClick={() =>
+									setTrackIndex((i) => (i - 1 + tracks.length) % tracks.length)
+								}
+								className="p-2 bg-pink-100 hover:bg-pink-200 rounded-full cursor-pointer"
+								title="Previous shared track"
+							>
+								<ArrowRight size={20} className="rotate-180" />
+							</button>
+
+							{/* Mini Spotify Embed */}
+							<iframe
+								key={tracks[trackIndex].id}
+								src={`https://open.spotify.com/embed/track/${tracks[trackIndex].id}`}
+								height="80"
+								frameBorder="0"
+								allow="encrypted-media"
+								title={tracks[trackIndex].name}
+								className="rounded"
+							/>
+
+							{/* Next Button */}
+							<button
+								onClick={() => setTrackIndex((i) => (i + 1) % tracks.length)}
+								className="p-2 bg-pink-100 hover:bg-pink-200 rounded-full cursor-pointer"
+								title="Next shared track"
+							>
+								<ArrowRight size={20} />
+							</button>
+						</div>
+					)}
 				</div>
 
 				<div
@@ -120,9 +168,99 @@ const ChatPage = () => {
 				>
 					{/* No messages yet */}
 					{messages.length === 0 ? (
-						<p className="text-center text-gray-500 py-8">
-							Start your conversation with {match.name}
-						</p>
+						<div className="text-center text-gray-600 py-8 space-y-4">
+							<p className="text-lg">
+								You both love{" "}
+								<span className="font-semibold">
+									{filterBad(match.commonArtists)
+										.map((a) => a.name)
+										.join(", ") || "music"}
+								</span>
+								—break the ice!
+							</p>
+
+							<div className="inline-grid grid-cols-1 gap-2 sm:grid-cols-2">
+								{/* 1) Ask about a shared artist */}
+								{filterBad(match.commonArtists)
+									.slice(0, 2)
+									.map((a, i) => (
+										<button
+											key={`artist-${i}`}
+											onClick={() =>
+												sendMessage(
+													match._id,
+													`What’s your favorite song by ${a.name}?`,
+													[],
+													[]
+												)
+											}
+											className="px-4 py-2 bg-pink-100 hover:bg-pink-200 rounded-full text-sm transition"
+										>
+											Ask about {a.name}
+										</button>
+									))}
+
+								{/* 2) Ask about a shared track */}
+								{filterBad(match.commonTracks)
+									.slice(0, 2)
+									.map((t, i) => (
+										<button
+											key={`track-${i}`}
+											onClick={() =>
+												sendMessage(
+													match._id,
+													`I loved "${t.name}". What do you think of it?`,
+													[],
+													[]
+												)
+											}
+											className="px-4 py-2 bg-blue-100 hover:bg-blue-200 rounded-full text-sm transition"
+										>
+											Talk about "{t.name}"
+										</button>
+									))}
+
+								{/* 3) Ask about a saved track */}
+								{filterBad(match.commonSaved)
+									.slice(0, 2)
+									.map((s, i) => (
+										<button
+											key={`saved-${i}`}
+											onClick={() =>
+												sendMessage(
+													match._id,
+													`We both saved "${s.name}". Why did you save it?`,
+													[],
+													[]
+												)
+											}
+											className="px-4 py-2 bg-green-100 hover:bg-green-200 rounded-full text-sm transition"
+										>
+											Why save "{s.name}"?
+										</button>
+									))}
+
+								{/* 4) Ask about a followed artist */}
+								{filterBad(match.commonFollowed)
+									.slice(0, 2)
+									.map((f, i) => (
+										<button
+											key={`followed-${i}`}
+											onClick={() =>
+												sendMessage(
+													match._id,
+													`You're following ${f.name}—any song recs?`,
+													[],
+													[]
+												)
+											}
+											className="px-4 py-2 bg-purple-100 hover:bg-purple-200 rounded-full text-sm transition"
+										>
+											Recommend from {f.name}
+										</button>
+									))}
+							</div>
+						</div>
 					) : (
 						<>
 							{
@@ -221,13 +359,13 @@ const ChatPage = () => {
 															.replace(
 																/(https?:\/\/[^\s]+)/g,
 																(url) =>
-																	`<a href="${url}" target="_blank" rel="noopener noreferrer" class="underline text-gray-100">${url}</a>`
+																	`<a href="${url}" target="_blank" rel="noopener noreferrer" class="underline text-blue-500">${url}</a>`
 															)
 															// Emails
 															.replace(
 																/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
 																(email) =>
-																	`<a href="mailto:${email}" class="underline text-gray-100">${email}</a>`
+																	`<a href="mailto:${email}" class="underline text-blue-600">${email}</a>`
 															)
 															// Location phrases like "Location: XYZ"
 															.replace(
@@ -235,7 +373,7 @@ const ChatPage = () => {
 																(_, location) =>
 																	`Location: <a href="https://www.google.com/maps/search/${encodeURIComponent(
 																		location
-																	)}" target="_blank" class="underline text-gray-100">${location}</a>`
+																	)}" target="_blank" class="underline text-blue-600">${location}</a>`
 															)
 															// Dates (MM/DD/YYYY, MM/DD/YY, or MM-DD-YYYY)
 															.replace(
@@ -250,7 +388,7 @@ const ChatPage = () => {
 																		/-/g,
 																		""
 																	)}/${startDate.replace(/-/g, "")}`;
-																	return `<a href="${calendarUrl}" target="_blank" class="underline text-gray-100">${m}/${d}/${y}</a>`;
+																	return `<a href="${calendarUrl}" target="_blank" class="underline text-blue-600">${m}/${d}/${y}</a>`;
 																}
 															),
 													}}

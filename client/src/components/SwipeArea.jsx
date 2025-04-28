@@ -1,5 +1,6 @@
 import TinderCard from "react-tinder-card";
 import { useMatchStore } from "../store/useMatchStore";
+import SharedChipsWithModal from "./SharedChipsWithModal";
 
 const SwipeArea = () => {
 	const { userProfiles, swipeRight, swipeLeft } = useMatchStore();
@@ -10,10 +11,10 @@ const SwipeArea = () => {
 	};
 
 	return (
-		<div className="relative w-full max-w-sm h-[28rem]">
+		<div className="relative w-full max-w-sm h-[32rem] shadow-lg">
 			{userProfiles.map((user) => (
 				<TinderCard
-					className="absolute shadow-none"
+					className="absolute shadow-none rounded-lg"
 					key={user._id}
 					onSwipe={(dir) => handleSwipe(dir, user)} // dir gives the direction
 					swipeRequirementType="position" // swipe will be triggered relative to the cards position
@@ -21,7 +22,7 @@ const SwipeArea = () => {
 					preventSwipe={["up", "down"]} // dont allow to swipe up or down
 				>
 					<div
-						className="card bg-white w-96 h-[28rem] select-none rounded-lg overflow-hidden border
+						className="card bg-white w-96 h-[32rem] select-none rounded-lg overflow-hidden border
 					 border-gray-200"
 					>
 						{/* IMAGE */}
@@ -41,6 +42,46 @@ const SwipeArea = () => {
 
 							{/* BIO */}
 							<p className="text-gray-600">{user.bio}</p>
+
+							{/* Shared Artists (pink) */}
+							<SharedChipsWithModal
+								items={user.commonArtists}
+								icon="🎵"
+								title="Shared Artists"
+								bg="pink"
+								limit={2}
+								spotifyType="artist"
+							/>
+
+							{/* Shared Tracks (blue) */}
+							<SharedChipsWithModal
+								items={user.commonTracks}
+								icon="🎶"
+								title="Shared Tracks"
+								bg="blue"
+								limit={2}
+								spotifyType="track"
+							/>
+
+							{/* Both Saved (green) */}
+							<SharedChipsWithModal
+								items={user.commonSaved}
+								icon="💾"
+								title="Both Saved Tracks"
+								bg="green"
+								limit={2}
+								spotifyType="track"
+							/>
+
+							{/* Shared Followed (purple) */}
+							<SharedChipsWithModal
+								items={user.commonFollowed}
+								icon="⭐"
+								title="Followed Artists"
+								bg="purple"
+								limit={2}
+								spotifyType="artist"
+							/>
 						</div>
 					</div>
 				</TinderCard>

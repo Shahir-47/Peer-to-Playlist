@@ -20,6 +20,8 @@ const HomePage = () => {
 		userProfiles,
 		subscribeToNewMatches,
 		unsubscribeFromNewMatches,
+		subscribeToNewUserProfiles,
+		unsubscribeFromNewUserProfiles,
 	} = useMatchStore();
 
 	const { authUser } = useAuthStore();
@@ -43,6 +45,18 @@ const HomePage = () => {
 			unsubscribeFromNewMatches();
 		};
 	}, [subscribeToNewMatches, unsubscribeFromNewMatches, authUser]);
+
+	/**
+	 * Subscribe to real-time "newUserProfile" events via WebSocket
+	 * Only sets up subscription if the user is authenticated.
+	 * Automatically unsubscribes when component unmount or when the user logs out.
+	 */
+	useEffect(() => {
+		authUser && subscribeToNewUserProfiles();
+		return () => {
+			unsubscribeFromNewUserProfiles();
+		};
+	}, [subscribeToNewUserProfiles, unsubscribeFromNewUserProfiles, authUser]);
 
 	return (
 		<div className="flex flex-col lg:flex-row min-h-screen bg-gradient-to-br from-pink-100 to-purple-100 overflow-hidden">
@@ -81,7 +95,8 @@ const NoMoreProfiles = () => (
 			Woah there, speedy fingers!
 		</h2>
 		<p className="text-xl text-gray-600 mb-6">
-			Bro are you OK? Maybe it&apos;s time to touch some grass.
+			Looks like you've swiped through all the profiles. Don't worry, more are
+			coming soon!
 		</p>
 	</div>
 );

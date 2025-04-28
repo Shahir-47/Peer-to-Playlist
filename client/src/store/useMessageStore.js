@@ -52,16 +52,24 @@ export const useMessageStore = create((set) => ({
 
 	//these two make it real time
 	subscribeToMessages: () => {
-		const socket = getSocket();
-
-		// When "newMessage" is received, append to chat in real-time
-		socket.on("newMessage", ({ message }) => {
-			set((state) => ({ messages: [...state.messages, message] }));
-		});
+		try {
+			const socket = getSocket();
+			socket.on("newMessage", (message) => {
+				set((state) => ({
+					messages: [...state.messages, message],
+				}));
+			});
+		} catch (error) {
+			console.log("Error subscribing to messages: ", error);
+		}
 	},
 
 	unsubscribeFromMessages: () => {
-		const socket = getSocket();
-		socket.off("newMessage"); // Remove the listener
+		try {
+			const socket = getSocket();
+			socket.off("newMessage");
+		} catch (error) {
+			console.log("Error unsubscribing from messages: ", error);
+		}
 	},
 }));

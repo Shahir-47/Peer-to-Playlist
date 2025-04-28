@@ -7,6 +7,7 @@ import path from "path"; // To handle file and directory paths
 
 // Import route handlers for different parts of the API
 import authRoutes from "./routes/authRoutes.js";
+import spotifyRoutes from "./routes/spotifyRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import matchRoutes from "./routes/matchRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
@@ -56,6 +57,7 @@ app.use(
 
 // Match each incoming request to the appropriate route handler.
 app.use("/api/auth", authRoutes);
+app.use("/api/auth/spotify", spotifyRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/matches", matchRoutes);
 app.use("/api/messages", messageRoutes);

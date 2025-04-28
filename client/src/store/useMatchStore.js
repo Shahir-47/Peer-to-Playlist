@@ -87,4 +87,28 @@ export const useMatchStore = create((set) => ({
 			console.log(error);
 		}
 	},
+
+	subscribeToNewUserProfiles: () => {
+		try {
+			const socket = getSocket();
+
+			//listening for events from backend called newMatch
+			socket.on("newUserProfile", () => {
+				//fetch new user profiles
+				useMatchStore.getState().getUserProfiles();
+			});
+		} catch (error) {
+			console.log(error);
+		}
+	},
+
+	//when we log out, we no longer listen for new matches
+	unsubscribeFromNewUserProfiles: () => {
+		try {
+			const socket = getSocket();
+			socket.off("newUserProfile");
+		} catch (error) {
+			console.log(error);
+		}
+	},
 }));
