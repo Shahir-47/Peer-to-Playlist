@@ -18,10 +18,10 @@ const COLOR_VARIANTS = {
 		text: "text-green-700",
 		hoverBg: "hover:bg-green-300",
 	},
-	gray: {
-		bg: "bg-gray-200",
-		text: "text-gray-700",
-		hoverBg: "hover:bg-gray-300",
+	purple: {
+		bg: "bg-purple-200",
+		text: "text-purple-700",
+		hoverBg: "hover:bg-purple-300",
 	},
 };
 
@@ -33,6 +33,7 @@ export default function SharedChipsWithModal({
 	limit = 2,
 	spotifyType = "track", // either "track" or "artist"
 }) {
+	console.log("SharedChipsWithModal got items:", items);
 	const [openList, setOpenList] = useState(false);
 	const [embedOpen, setEmbedOpen] = useState(false);
 	const [selectedItem, setSelectedItem] = useState(null);
@@ -62,8 +63,11 @@ export default function SharedChipsWithModal({
 	}
 
 	return (
-		<div className="mt-3">
+		<div className="mt-0.5">
 			{/* inline chips */}
+			<p className="text-sm text-gray-500 mb-0.75">
+				{title} ({filtered.length})
+			</p>
 			<div className="flex flex-wrap gap-2">
 				{visible.map((it) => (
 					<span
@@ -72,7 +76,7 @@ export default function SharedChipsWithModal({
 						className={`flex items-center space-x-1 px-3 py-1 rounded-full ${bgClass} ${textClass} text-xs cursor-pointer ${hoverBg}`}
 					>
 						<span>{icon}</span>
-						<span>{it.name}</span>
+						<span className="block max-w-[5rem] truncate">{it.name}</span>
 					</span>
 				))}
 
@@ -96,7 +100,17 @@ export default function SharedChipsWithModal({
 						className="bg-white p-6 rounded-lg max-w-xs w-full border border-pink-600 shadow-lg"
 						onClick={(e) => e.stopPropagation()}
 					>
-						<h3 className="text-lg font-semibold mb-4">{title}</h3>
+						<div className="flex align-items-center mb-4">
+							<h3 className="text-lg font-semibold">{title}</h3>
+							<button
+								onClick={() => setOpenList(false)}
+								className="ml-auto text-gray-500 hover:text-red-500 transition-colors cursor-pointer bg-pink-200 rounded-full p-1 hover:bg-pink-300"
+							>
+								<X size={16} />
+							</button>
+						</div>
+
+						{/* list of items */}
 						<div className="space-y-2 max-h-60 overflow-y-auto">
 							{filtered.map((it) => (
 								<div
@@ -108,16 +122,10 @@ export default function SharedChipsWithModal({
 									className={`flex items-center space-x-2 px-3 py-2 rounded-md ${bgClass} ${textClass} cursor-pointer ${hoverBg}`}
 								>
 									<span>{icon}</span>
-									<span>{it.name}</span>
+									<span className="block truncate">{it.name}</span>
 								</div>
 							))}
 						</div>
-						<button
-							onClick={() => setOpenList(false)}
-							className="mt-4 px-4 py-2 bg-pink-600 text-white rounded-md"
-						>
-							Close
-						</button>
 					</div>
 				</div>
 			)}
@@ -135,7 +143,7 @@ export default function SharedChipsWithModal({
 						{/* close button */}
 						<button
 							onClick={closeEmbed}
-							className="absolute top-5 right-4 text-gray-500 hover:text-red-500 z-10 transition-colors cursor-pointer bg-pink-200 rounded-full p-1 hover:bg-pink-300"
+							className="absolute top-12 right-5 text-gray-500 hover:text-red-500 z-10 transition-colors cursor-pointer bg-pink-200 rounded-full p-1 hover:bg-pink-300"
 						>
 							<X size={16} />
 						</button>

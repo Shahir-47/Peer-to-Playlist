@@ -200,13 +200,29 @@ export const getUserProfiles = async (req, res) => {
 				(mine.savedTracks || []).includes(s)
 			);
 
+			const commonFollowed = (theirs.followedArtists || []).filter((a) =>
+				(mine.followedArtists || []).includes(a)
+			);
+
 			commonArtists.forEach((id) => allArtistIds.add(id));
 			commonTracks.forEach((id) => allTrackIds.add(id));
 			commonSaved.forEach((id) => allTrackIds.add(id));
+			commonFollowed.forEach((id) => allArtistIds.add(id));
 
 			const score =
-				commonArtists.length * 3 + commonTracks.length * 2 + commonSaved.length;
-			return { user: u, score, commonArtists, commonTracks, commonSaved };
+				commonArtists.length * 3 +
+				commonTracks.length * 2 +
+				commonSaved.length * 1 +
+				commonFollowed.length * 1;
+
+			return {
+				user: u,
+				score,
+				commonArtists,
+				commonTracks,
+				commonSaved,
+				commonFollowed,
+			};
 		});
 
 		// now batch-fetch human names
@@ -235,6 +251,10 @@ export const getUserProfiles = async (req, res) => {
 			commonSaved: s.commonSaved.map((id) => ({
 				id,
 				name: spotifyNameCache.tracks.get(id),
+			})),
+			commonFollowed: s.commonFollowed.map((id) => ({
+				id,
+				name: spotifyNameCache.artists.get(id),
 			})),
 		}));
 

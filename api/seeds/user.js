@@ -30,7 +30,21 @@ const sampleTrackIds = [
 	"2oBOaqeWSenwf7M6bJyR1A",
 	"4xigPf2sigSPmuFH3qCelB",
 ];
-const sampleFollowed = [
+
+const sampleSavedTrackIds = [
+	"0MWUDWyvXuwJzA4yR1dmZJ",
+	"7dSCxR4LqkmxoBrq9MzVSD",
+	"2oBOaqeWSenwf7M6bJyR1A",
+	"71Xtu0sdK3X4EyUKiPjylF",
+	"7MXlyK9MD4A3ZhDoaqA7C7",
+	"3MjUtNVVq3C8Fn0MP3zhXa",
+	"1z3ugFmUKoCzGsI6jdY4Ci",
+	"4ylWMuGbMXNDgDd8lErEle",
+	"0B9x2BRHqj3Qer7biM3pU3",
+	"7wCmS9TTVUcIhRalDYFgPy",
+];
+
+const sampleFollowedIds = [
 	"0tIqhSs5ERm2J1cOcbxTq5",
 	"0ONHkAv9pCAFxb0zJwDNTy",
 	"5K4W6rqBFWDnAN6FQUkS6x",
@@ -104,8 +118,8 @@ const generateSpotifyData = () => {
 		expiresAt: new Date(now + 3600 * 1000), // 1 hr from now
 		topArtists: pick(sampleArtistIds, 5),
 		topTracks: pick(sampleTrackIds, 8),
-		savedTracks: pick(sampleTrackIds, 5),
-		followedArtists: pick(sampleFollowed, 4),
+		savedTracks: pick(sampleSavedTrackIds, 5),
+		followedArtists: pick(sampleFollowedIds, 4),
 	};
 };
 
@@ -129,7 +143,10 @@ const generateRandomUser = (gender, i) => {
 
 const seed = async () => {
 	await mongoose.connect(process.env.MONGO_URI);
-	await User.deleteMany({});
+	await User.deleteMany({
+		email: { $ne: "spotify@whatever.com" },
+	});
+
 	const users = [
 		...maleNames.map((_, i) => generateRandomUser("male", i)),
 		...femaleNames.map((_, i) => generateRandomUser("female", i)),

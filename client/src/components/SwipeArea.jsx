@@ -11,10 +11,10 @@ const SwipeArea = () => {
 	};
 
 	return (
-		<div className="relative w-full max-w-sm h-[28rem]">
+		<div className="relative w-full max-w-sm h-[32rem] shadow-lg">
 			{userProfiles.map((user) => (
 				<TinderCard
-					className="absolute shadow-none"
+					className="absolute shadow-none rounded-lg"
 					key={user._id}
 					onSwipe={(dir) => handleSwipe(dir, user)} // dir gives the direction
 					swipeRequirementType="position" // swipe will be triggered relative to the cards position
@@ -22,7 +22,7 @@ const SwipeArea = () => {
 					preventSwipe={["up", "down"]} // dont allow to swipe up or down
 				>
 					<div
-						className="card bg-white w-96 h-[28rem] select-none rounded-lg overflow-hidden border
+						className="card bg-white w-96 h-[32rem] select-none rounded-lg overflow-hidden border
 					 border-gray-200"
 					>
 						{/* IMAGE */}
@@ -71,6 +71,16 @@ const SwipeArea = () => {
 								bg="green"
 								limit={2}
 								spotifyType="track"
+							/>
+
+							{/* Shared Followed (purple) */}
+							<SharedChipsWithModal
+								items={user.commonFollowed}
+								icon="⭐"
+								title="Followed Artists"
+								bg="purple"
+								limit={2}
+								spotifyType="artist"
 							/>
 						</div>
 					</div>
