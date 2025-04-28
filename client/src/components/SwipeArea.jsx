@@ -49,8 +49,8 @@ const SwipeArea = () => {
 								icon="🎵"
 								title="Shared Artists"
 								bg="pink"
-								text="700"
 								limit={2}
+								spotifyType="artist"
 							/>
 
 							{/* Shared Tracks (blue) */}
@@ -59,8 +59,8 @@ const SwipeArea = () => {
 								icon="🎶"
 								title="Shared Tracks"
 								bg="blue"
-								text="700"
 								limit={2}
+								spotifyType="track"
 							/>
 
 							{/* Both Saved (green) */}
@@ -69,8 +69,8 @@ const SwipeArea = () => {
 								icon="💾"
 								title="Both Saved Tracks"
 								bg="green"
-								text="700"
 								limit={2}
+								spotifyType="track"
 							/>
 						</div>
 					</div>

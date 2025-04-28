@@ -1,5 +1,6 @@
 // components/SharedChipsWithModal.jsx
 import { useState } from "react";
+import { X } from "lucide-react";
 
 const COLOR_VARIANTS = {
 	pink: {
@@ -29,16 +30,36 @@ export default function SharedChipsWithModal({
 	icon,
 	title,
 	bg = "gray",
-	limit = 2, // show at most 2 inline
+	limit = 2,
+	spotifyType = "track", // either "track" or "artist"
 }) {
-	const [open, setOpen] = useState(false);
-	const visible = items.slice(0, limit);
-	const moreCount = items.length - visible.length;
+	const [openList, setOpenList] = useState(false);
+	const [embedOpen, setEmbedOpen] = useState(false);
+	const [selectedItem, setSelectedItem] = useState(null);
+
 	const {
 		bg: bgClass,
 		text: textClass,
 		hoverBg,
 	} = COLOR_VARIANTS[bg] || COLOR_VARIANTS.gray;
+
+	const filtered = items.filter((it) => {
+		const n = it.name.toLowerCase();
+		return n !== "kanye west" && !n.includes("dexter");
+	});
+
+	const visible = filtered.slice(0, limit);
+	const moreCount = filtered.length - visible.length;
+
+	function openEmbed(item) {
+		setSelectedItem(item);
+		setEmbedOpen(true);
+	}
+
+	function closeEmbed() {
+		setEmbedOpen(false);
+		setSelectedItem(null);
+	}
 
 	return (
 		<div className="mt-3">
@@ -47,7 +68,8 @@ export default function SharedChipsWithModal({
 				{visible.map((it) => (
 					<span
 						key={it.id}
-						className={`flex items-center space-x-1 px-3 py-1 rounded-full ${bgClass} ${textClass} text-xs`}
+						onClick={() => openEmbed(it)}
+						className={`flex items-center space-x-1 px-3 py-1 rounded-full ${bgClass} ${textClass} text-xs cursor-pointer ${hoverBg}`}
 					>
 						<span>{icon}</span>
 						<span>{it.name}</span>
@@ -56,7 +78,7 @@ export default function SharedChipsWithModal({
 
 				{moreCount > 0 && (
 					<button
-						onClick={() => setOpen(true)}
+						onClick={() => setOpenList(true)}
 						className={`flex items-center space-x-1 px-3 py-1 rounded-full ${bgClass} ${textClass} text-xs cursor-pointer ${hoverBg}`}
 					>
 						<span>+{moreCount} more</span>
@@ -64,21 +86,26 @@ export default function SharedChipsWithModal({
 				)}
 			</div>
 
-			{open && (
+			{/* list-modal */}
+			{openList && (
 				<div
-					className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm"
-					onClick={() => setOpen(false)}
+					className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 backdrop-blur-sm"
+					onClick={() => setOpenList(false)}
 				>
 					<div
-						className="bg-white p-6 rounded-lg max-w-xs w-full border shadow-lg"
+						className="bg-white p-6 rounded-lg max-w-xs w-full border border-pink-600 shadow-lg"
 						onClick={(e) => e.stopPropagation()}
 					>
 						<h3 className="text-lg font-semibold mb-4">{title}</h3>
 						<div className="space-y-2 max-h-60 overflow-y-auto">
-							{items.map((it) => (
+							{filtered.map((it) => (
 								<div
 									key={it.id}
-									className={`flex items-center space-x-2 px-3 py-2 rounded-md ${bgClass} ${textClass}`}
+									onClick={() => {
+										setOpenList(false);
+										openEmbed(it);
+									}}
+									className={`flex items-center space-x-2 px-3 py-2 rounded-md ${bgClass} ${textClass} cursor-pointer ${hoverBg}`}
 								>
 									<span>{icon}</span>
 									<span>{it.name}</span>
@@ -86,11 +113,42 @@ export default function SharedChipsWithModal({
 							))}
 						</div>
 						<button
-							onClick={() => setOpen(false)}
+							onClick={() => setOpenList(false)}
 							className="mt-4 px-4 py-2 bg-pink-600 text-white rounded-md"
 						>
 							Close
 						</button>
+					</div>
+				</div>
+			)}
+
+			{/* spotify-embed modal */}
+			{embedOpen && selectedItem && (
+				<div
+					className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 backdrop-blur-sm"
+					onClick={closeEmbed}
+				>
+					<div
+						className="p-0 rounded-xl shadow-lg "
+						onClick={(e) => e.stopPropagation()}
+					>
+						{/* close button */}
+						<button
+							onClick={closeEmbed}
+							className="absolute top-5 right-4 text-gray-500 hover:text-red-500 z-10 transition-colors cursor-pointer bg-pink-200 rounded-full p-1 hover:bg-pink-300"
+						>
+							<X size={16} />
+						</button>
+
+						{/* spotify embed */}
+						<iframe
+							src={`https://open.spotify.com/embed/${spotifyType}/${selectedItem.id}`}
+							width="300"
+							height="380"
+							frameBorder="0"
+							allow="encrypted-media"
+							title={selectedItem.name}
+						></iframe>
 					</div>
 				</div>
 			)}
