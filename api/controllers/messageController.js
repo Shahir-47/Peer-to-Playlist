@@ -54,10 +54,7 @@ export const sendMessage = async (req, res) => {
 
 		// If the receiver is connected, emit a "newMessage" event in real-time
 		if (receiverSocketId) {
-			io.to(receiverSocketId).emit("newMessage", {
-				message: newMessage,
-				senderId: req.user.id,
-			});
+			io.to(receiverSocketId).emit("newMessage", newMessage);
 		}
 
 		res.status(201).json({

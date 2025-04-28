@@ -33,7 +33,6 @@ export default function SharedChipsWithModal({
 	limit = 2,
 	spotifyType = "track", // either "track" or "artist"
 }) {
-	console.log("SharedChipsWithModal got items:", items);
 	const [openList, setOpenList] = useState(false);
 	const [embedOpen, setEmbedOpen] = useState(false);
 	const [selectedItem, setSelectedItem] = useState(null);
