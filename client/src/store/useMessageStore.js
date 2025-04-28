@@ -8,6 +8,19 @@ export const useMessageStore = create((set) => ({
 	messages: [], // List of all messages in the current conversation
 	loading: true, // Tracks loading state while fetching messages
 
+	getPublicKeys : async (userId) => {
+		try {
+			set({ loading: true });
+			const res = await axiosInstance.get(`/messages/conversation/${userId}`);
+			set({ messages: res.data.messages });
+		} catch (error) {
+			console.log(error);
+			set({ messages: [] });
+		} finally {
+			set({ loading: false });
+		}
+	},
+
 	sendMessage: async (receiverId, content, attachments) => {
 		try {
 			// show message in chat

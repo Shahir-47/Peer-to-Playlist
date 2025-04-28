@@ -67,6 +67,66 @@ export const sendMessage = async (req, res) => {
 	}
 };
 
+export const sendPublicKeys = async(req,res) => {
+	try {// Get Socket.IO instance and connected users map
+	const io = getIO();
+	const connectedUsers = getConnectedUsers();
+	// Look up the receiver's socket ID (if they're online)
+	const receiverSocketId = connectedUsers.get(receiverId);
+	const userId = req.user.id;
+
+	//sieve of Eratosthenes 
+	//code from https://stackoverflow.com/questions/61700358/generating-random-prime-number
+	const getPrimes = (min, max) => {
+		const result = Array(max + 1)
+		  .fill(0)
+		  .map((_, i) => i);
+		for (let i = 2; i <= Math.sqrt(max + 1); i++) {
+		  for (let j = i ** 2; j < max + 1; j += i) delete result[j];
+		}
+		return Object.values(result.slice(Math.max(min, 2)));
+	  };
+	  
+	  const getRandNum = (min, max) => {
+		return Math.floor(Math.random() * (max - min + 1) + min);
+	  };
+	  
+	  const getRandPrime1 = (min, max) => {
+		const primes = getPrimes(min, max);
+		return primes[getRandNum(0, primes.length - 1)];
+	  };
+
+	  const getRandPrime2 = (min, max) => {
+		const primes = getPrimes(min, max);
+		return primes[getRandNum(0, primes.length - 1)];
+	  };
+
+	  // Create a new message in the DB with sender, receiver, and content
+		const newMessage = await Message.create({
+			sender: req.user.id,
+			receiver: receiverId,
+			content: getRandPrime1, getRandPrime2,
+			attachments: savedAttachments,
+		});
+	if (receiverSocketId) {
+		io.to(receiverSocketId).emit("newMessage", {
+			message: newMessage,
+			senderId: req.user.id,
+		});
+	}
+	res.status(201).json({
+		success: true,
+		message: newMessage,
+	});}
+	catch (error){
+		console.log("Error in sendMessage: ", error);
+		res.status(500).json({
+			success: false,
+			message: "Internal server error",
+		});
+	}
+};
+
 export const getConversation = async (req, res) => {
 	const { userId } = req.params; // ID of the other user in the conversation
 
