@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { ArrowRight } from "lucide-react";
 import { Header } from "../components/Header";
 import { useAuthStore } from "../store/useAuthStore";
 import { useMatchStore } from "../store/useMatchStore";
@@ -18,6 +19,13 @@ const masonryBreakpoints = {
 	480: 1, // <480px → 1 col
 };
 
+// filter out Kanye / Dexter from any list
+const filterBad = (arr = []) =>
+	arr.filter((it) => {
+		const n = it.name.toLowerCase();
+		return n !== "kanye west" && !n.includes("dexter");
+	});
+
 const ChatPage = () => {
 	const { getMyMatches, matches, isLoadingMyMatches } = useMatchStore();
 
@@ -29,6 +37,7 @@ const ChatPage = () => {
 		unsubscribeFromMessages,
 	} = useMessageStore();
 	const { authUser } = useAuthStore();
+	const [trackIndex, setTrackIndex] = useState(0);
 	const [viewAttachment, setViewAttachment] = useState(null);
 	const [linkPreviewMap, setLinkPreviewMap] = useState({}); // message._id -> [{ url, preview }]
 
@@ -40,13 +49,6 @@ const ChatPage = () => {
 	// Find the matched user from the matches array
 	// This is used to display the match's name and image in the chat header
 	const match = matches.find((m) => m?._id === id);
-
-	// filter out Kanye / Dexter from any list
-	const filterBad = (arr = []) =>
-		arr.filter((it) => {
-			const n = it.name.toLowerCase();
-			return n !== "kanye west" && !n.includes("dexter");
-		});
 
 	// Handle opening the attachment modal
 	const handleViewAttachmentClick = (attachment) => {
@@ -109,6 +111,8 @@ const ChatPage = () => {
 	if (isLoadingMyMatches) return <LoadingMessagesUI />;
 	if (!match) return <MatchNotFound />;
 
+	const tracks = filterBad(match.commonTracks);
+
 	return (
 		//UI stuff
 		<div className="flex flex-col h-screen bg-gray-100 bg-opacity-50">
@@ -121,6 +125,41 @@ const ChatPage = () => {
 						className="w-12 h-12 object-cover rounded-full mr-3 border-2 border-pink-300"
 					/>
 					<h2 className="text-xl font-semibold text-gray-800">{match.name}</h2>
+
+					{tracks.length > 0 && (
+						<div className="ml-auto flex items-center space-x-2">
+							{/* Previous Button */}
+							<button
+								onClick={() =>
+									setTrackIndex((i) => (i - 1 + tracks.length) % tracks.length)
+								}
+								className="p-2 bg-pink-100 hover:bg-pink-200 rounded-full cursor-pointer"
+								title="Previous shared track"
+							>
+								<ArrowRight size={20} className="rotate-180" />
+							</button>
+
+							{/* Mini Spotify Embed */}
+							<iframe
+								key={tracks[trackIndex].id}
+								src={`https://open.spotify.com/embed/track/${tracks[trackIndex].id}`}
+								height="80"
+								frameBorder="0"
+								allow="encrypted-media"
+								title={tracks[trackIndex].name}
+								className="rounded"
+							/>
+
+							{/* Next Button */}
+							<button
+								onClick={() => setTrackIndex((i) => (i + 1) % tracks.length)}
+								className="p-2 bg-pink-100 hover:bg-pink-200 rounded-full cursor-pointer"
+								title="Next shared track"
+							>
+								<ArrowRight size={20} />
+							</button>
+						</div>
+					)}
 				</div>
 
 				<div
