@@ -182,10 +182,7 @@ const generateRandomUser = (i) => {
 	};
 };
 
-const EXCLUDE_EMAILS = new Set([
-	"shahirahmed30@gmail.comty".toLowerCase(),
-	"tEST@123.COM".toLowerCase(),
-]);
+const EXCLUDE_EMAILS = new Set([]);
 
 const seed = async () => {
 	await mongoose.connect(process.env.MONGO_URI);
