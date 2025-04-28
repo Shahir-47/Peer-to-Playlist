@@ -10,10 +10,8 @@ const SignUpForm = () => {
 	const [email, setEmail] = useState("");
 	const [emailValid, setEmailValid] = useState(true);
 	const [password, setPassword] = useState("");
-	const [gender, setGender] = useState("");
 	const [age, setAge] = useState("");
 	const [ageValid, setAgeValid] = useState(true);
-	const [genderPreference, setGenderPreference] = useState("");
 
 	const [passwordFeedback, setPasswordFeedback] = useState([]);
 	const [showPassword, setShowPassword] = useState(false);
@@ -90,9 +88,7 @@ const SignUpForm = () => {
 					name,
 					email,
 					password,
-					gender,
 					age,
-					genderPreference,
 					spotify: spotifyTokens,
 				}); // Call the signup function from the auth store with the form data
 				// The signup function will handle the API call and update the loading state
@@ -242,104 +238,6 @@ const SignUpForm = () => {
 						You must be between 18 and 120 years old.
 					</p>
 				)}
-			</div>
-
-			{/* GENDER */}
-			<div>
-				<label className="block text-sm font-medium text-gray-700">
-					Your Gender
-				</label>
-				<div className="mt-2 flex gap-2">
-					<div className="flex items-center">
-						<input
-							id="male"
-							name="gender"
-							type="checkbox"
-							checked={gender === "male"} // Checkbox is checked when the selected gender state is "male"
-							onChange={() => setGender("male")}
-							className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
-						/>
-						<label htmlFor="male" className="ml-2 block text-sm text-gray-900">
-							Male
-						</label>
-					</div>
-					<div className="flex items-center">
-						<input
-							id="female"
-							name="gender"
-							type="checkbox"
-							checked={gender === "female"} // Checkbox is checked when the selected gender state is "female"
-							onChange={() => setGender("female")}
-							className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
-						/>
-						<label
-							htmlFor="female"
-							className="ml-2 block text-sm text-gray-900"
-						>
-							Female
-						</label>
-					</div>
-				</div>
-			</div>
-
-			{/* GENDER PREFERENCE */}
-			<div>
-				<label className="block text-sm font-medium text-gray-700">
-					Prefer Me
-				</label>
-				<div className="mt-2 space-y-2">
-					<div className="flex items-center">
-						<input
-							id="prefer-male"
-							name="gender-preference"
-							type="radio"
-							value="male"
-							checked={genderPreference === "male"} // Radio button is selected when genderPreference state is "male"
-							onChange={(e) => setGenderPreference(e.target.value)}
-							className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300"
-						/>
-						<label
-							htmlFor="prefer-male"
-							className="ml-2 block text-sm text-gray-900"
-						>
-							Male
-						</label>
-					</div>
-					<div className="flex items-center">
-						<input
-							id="prefer-female"
-							name="gender-preference"
-							type="radio"
-							value="female"
-							checked={genderPreference === "female"} // Radio button is selected when genderPreference state is "female"
-							onChange={(e) => setGenderPreference(e.target.value)}
-							className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300"
-						/>
-						<label
-							htmlFor="prefer-female"
-							className="ml-2 block text-sm text-gray-900"
-						>
-							Female
-						</label>
-					</div>
-					<div className="flex items-center">
-						<input
-							id="prefer-both"
-							name="gender-preference"
-							type="radio"
-							value="both"
-							checked={genderPreference === "both"} // Radio button is selected when genderPreference state is "both"
-							onChange={(e) => setGenderPreference(e.target.value)}
-							className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300"
-						/>
-						<label
-							htmlFor="prefer-both"
-							className="ml-2 block text-sm text-gray-900"
-						>
-							Both
-						</label>
-					</div>
-				</div>
 			</div>
 
 			{/* SPOTIFY CONNECT BUTTON */}

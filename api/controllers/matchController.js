@@ -165,20 +165,15 @@ export const getUserProfiles = async (req, res) => {
 			currentUser._id
 		);
 
+		const excludeIds = [
+			currentUser._id,
+			...currentUser.likes,
+			...currentUser.dislikes,
+			...currentUser.matches,
+		];
+
 		const candidates = await User.find({
-			_id: { $ne: currentUser._id },
-			_id: {
-				$nin: [
-					...currentUser.likes,
-					...currentUser.dislikes,
-					...currentUser.matches,
-				],
-			},
-			gender:
-				currentUser.genderPreference === "both"
-					? { $in: ["male", "female"] }
-					: currentUser.genderPreference,
-			genderPreference: { $in: [currentUser.gender, "both"] },
+			_id: { $nin: excludeIds },
 		});
 
 		// gather all common IDs to batch-fetch names

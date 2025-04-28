@@ -9,10 +9,6 @@ const ProfilePage = () => {
 	const [bio, setBio] = useState(authUser.bio || "");
 	const [age, setAge] = useState(authUser.age || "");
 	const [ageValid, setAgeValid] = useState(true);
-	const [gender, setGender] = useState(authUser.gender || "");
-	const [genderPreference, setGenderPreference] = useState(
-		authUser.genderPreference || []
-	);
 	const [image, setImage] = useState(authUser.image || null);
 
 	const fileInputRef = useRef(null); // use this to upload an image
@@ -34,7 +30,7 @@ const ProfilePage = () => {
 
 	const handleSubmit = (e) => {
 		e.preventDefault(); // Stops page reload so we can handle form submission with JavaScript
-		updateProfile({ name, bio, age, gender, genderPreference, image }); // Call the update function to update user data
+		updateProfile({ name, bio, age, image }); // Call the update function to update user data
 	}; // The updateProfile function will handle the API call and update the loading state
 
 	return (
@@ -122,53 +118,6 @@ const ProfilePage = () => {
 										You must be between 18 and 120 years old.
 									</p>
 								)}
-							</div>
-
-							{/* GENDER */}
-							<div>
-								<span className="block text-sm font-medium text-gray-700 mb-2">
-									Gender
-								</span>
-								<div className="flex space-x-4">
-									{["Male", "Female"].map((option) => (
-										<label key={option} className="inline-flex items-center">
-											<input
-												type="radio"
-												className="form-radio text-pink-600"
-												name="gender"
-												value={option.toLowerCase()} // convert to lowercase value so it matches the database
-												checked={gender === option.toLowerCase()}
-												onChange={() => setGender(option.toLowerCase())} // update the gender state
-											/>
-											<span className="ml-2">{option}</span>
-										</label>
-									))}
-								</div>
-							</div>
-
-							{/* GENDER PREFERENCE */}
-							<div>
-								<span className="block text-sm font-medium text-gray-700 mb-2">
-									Gender Preference
-								</span>
-								<div className="flex space-x-4">
-									{["Male", "Female", "Both"].map((option) => (
-										<label key={option} className="inline-flex items-center">
-											<input
-												type="checkbox"
-												className="form-checkbox text-pink-600"
-												checked={
-													genderPreference.toLowerCase() ===
-													option.toLowerCase()
-												} // convert to lowercase value so it matches the database
-												onChange={
-													() => setGenderPreference(option.toLowerCase()) // update gender preference state
-												}
-											/>
-											<span className="ml-2">{option}</span>
-										</label>
-									))}
-								</div>
 							</div>
 
 							{/* BIO */}

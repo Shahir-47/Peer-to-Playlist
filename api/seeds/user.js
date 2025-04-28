@@ -30,7 +30,6 @@ const sampleTrackIds = [
 	"2oBOaqeWSenwf7M6bJyR1A",
 	"4xigPf2sigSPmuFH3qCelB",
 ];
-
 const sampleSavedTrackIds = [
 	"0MWUDWyvXuwJzA4yR1dmZJ",
 	"7dSCxR4LqkmxoBrq9MzVSD",
@@ -43,7 +42,6 @@ const sampleSavedTrackIds = [
 	"0B9x2BRHqj3Qer7biM3pU3",
 	"7wCmS9TTVUcIhRalDYFgPy",
 ];
-
 const sampleFollowedIds = [
 	"0tIqhSs5ERm2J1cOcbxTq5",
 	"0ONHkAv9pCAFxb0zJwDNTy",
@@ -53,32 +51,64 @@ const sampleFollowedIds = [
 	"1Xyo4u8uXC1ZmMpatF05PJ",
 ];
 
-const maleNames = [
-	"James",
-	"John",
-	"Robert",
-	"Michael",
-	"William",
-	"David",
-	"Richard",
-	"Joseph",
-	"Thomas",
+const names = [
+	"Alex",
+	"Blake",
+	"Casey",
+	"Dana",
+	"Elliot",
+	"Frankie",
+	"Jordan",
+	"Kai",
+	"Morgan",
+	"Pat",
+	"Quinn",
+	"Riley",
+	"Rowan",
+	"Sam",
+	"Taylor",
+	"Terry",
+	"Billie",
+	"Cameron",
+	"Chris",
+	"Jamie",
+	"Lee",
+	"Skyler",
 ];
-const femaleNames = [
-	"Mary",
-	"Patricia",
-	"Jennifer",
-	"Linda",
-	"Elizabeth",
-	"Barbara",
-	"Susan",
-	"Jessica",
-	"Sarah",
-	"Karen",
-	"Nancy",
-	"Lisa",
+
+const styleNames = [
+	"adventurer",
+	"adventurer-neutral",
+	"avataaars",
+	"avataaars-neutral",
+	"big-ears",
+	"big-ears-neutral",
+	"big-smile",
+	"bottts",
+	"bottts-neutral",
+	"croodles",
+	"croodles-neutral",
+	"dylan",
+	"fun-emoji",
+	"glass",
+	"icons",
+	"identicon",
+	"initials",
+	"lorelei",
+	"lorelei-neutral",
+	"micah",
+	"miniavs",
+	"notionists",
+	"notionists-neutral",
+	"open-peeps",
+	"personas",
+	"pixel-art",
+	"pixel-art-neutral",
+	"rings",
+	"shapes",
+	"thumbs",
 ];
-const genderPreferences = ["male", "female", "both"];
+
 const bioDescriptors = [
 	"Coffee addict",
 	"Cat lover",
@@ -102,12 +132,20 @@ const bioDescriptors = [
 	"Aspiring chef",
 ];
 
+const pickOne = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
 const pick = (arr, n) => {
 	const copy = [...arr].sort(() => 0.5 - Math.random());
 	return copy.slice(0, n);
 };
 
 const generateBio = () => pick(bioDescriptors, 3).join(" | ");
+
+const avatars = names.map((_, i) => {
+	const style = pickOne(styleNames);
+	const seed = encodeURIComponent(names[i]);
+	return `https://api.dicebear.com/9.x/${style}/svg?seed=${seed}`;
+});
 
 const generateSpotifyData = () => {
 	const now = Date.now();
@@ -123,9 +161,8 @@ const generateSpotifyData = () => {
 	};
 };
 
-const generateRandomUser = (gender, i) => {
-	const names = gender === "male" ? maleNames : femaleNames;
-	const name = names[i % names.length];
+const generateRandomUser = (i) => {
+	const name = names[i];
 	const age = 21 + Math.floor(Math.random() * 25); // 21–45
 	const email = `${name.toLowerCase()}${age}@example.com`;
 	return {
@@ -133,26 +170,21 @@ const generateRandomUser = (gender, i) => {
 		email,
 		password: bcrypt.hashSync("password123", 10),
 		age,
-		gender,
-		genderPreference: pick(genderPreferences, 1)[0],
 		bio: generateBio(),
-		image: `/${gender}/${(i % 5) + 1}.jpg`,
+		image: avatars[i],
 		spotify: generateSpotifyData(),
 	};
 };
 
 const seed = async () => {
 	await mongoose.connect(process.env.MONGO_URI);
-	await User.deleteMany({
-		email: { $ne: "spotify@whatever.com" },
-	});
+	await User.deleteMany({});
 
-	const users = [
-		...maleNames.map((_, i) => generateRandomUser("male", i)),
-		...femaleNames.map((_, i) => generateRandomUser("female", i)),
-	];
+	const users = names.map((_, i) => generateRandomUser(i));
+
 	await User.insertMany(users);
 	console.log("Seeded", users.length, "users with Spotify data");
+
 	mongoose.disconnect();
 };
 
