@@ -1,4 +1,5 @@
 import { makeSpotifyClient } from "../utils/spotifyClientFactory.js";
+import { getIO } from "../socket/socket.server.js";
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 
@@ -130,6 +131,10 @@ export const signup = async (req, res) => {
 		}
 
 		await user.save();
+
+		// broadcast new‐user to everyone
+		const io = getIO();
+		io.emit("newUserProfile");
 
 		// Sign a JWT token with the new user's ID
 		const token = signToken(user._id);
