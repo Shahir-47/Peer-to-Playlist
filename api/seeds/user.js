@@ -176,11 +176,30 @@ const generateRandomUser = (i) => {
 	};
 };
 
+const EXCLUDE_EMAILS = new Set([
+	"shahirahmed30@gmail.comty".toLowerCase(),
+	"tEST@123.COM".toLowerCase(),
+]);
+
 const seed = async () => {
 	await mongoose.connect(process.env.MONGO_URI);
-	await User.deleteMany({});
 
-	const users = names.map((_, i) => generateRandomUser(i));
+	// Remove all users except those we want to keep
+	await User.deleteMany({
+		email: { $nin: Array.from(EXCLUDE_EMAILS) },
+	});
+
+	const users = [];
+	let i = 0,
+		count = 0;
+	while (count < 5 && i < names.length) {
+		const candidate = generateRandomUser(i);
+		if (!EXCLUDE_EMAILS.has(candidate.email.toLowerCase())) {
+			users.push(candidate);
+			count++;
+		}
+		i++;
+	}
 
 	await User.insertMany(users);
 	console.log("Seeded", users.length, "users with Spotify data");

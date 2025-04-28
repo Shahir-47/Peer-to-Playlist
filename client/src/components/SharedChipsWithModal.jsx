@@ -75,7 +75,7 @@ export default function SharedChipsWithModal({
 						className={`flex items-center space-x-1 px-3 py-1 rounded-full ${bgClass} ${textClass} text-xs cursor-pointer ${hoverBg}`}
 					>
 						<span>{icon}</span>
-						<span className="block max-w-[5rem] truncate">{it.name}</span>
+						<span className="block max-w-[4.75rem] truncate">{it.name}</span>
 					</span>
 				))}
 
