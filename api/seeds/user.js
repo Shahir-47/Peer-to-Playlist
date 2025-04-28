@@ -9,46 +9,52 @@ dotenv.config();
 
 // pools of real-looking Spotify IDs
 const sampleArtistIds = [
-	"5K4W6rqBFWDnAN6FQUkS6x",
-	"7dGJo4pcD2V6oG8kP0tJRR",
-	"2YZyLoL8N0Wb9xBt1NhZWg",
-	"5pKCCKE2ajJHZ9KAiaK11H",
-	"53XhwfbYqKCa1cC15pYq2q",
-	"5INjqkS1o8h1imAzPqGZBb",
-	"711MCceyCBcFnzjGY4Q7Un",
-	"7Ln80lUS6He07XvHI8qqHH",
+	"25uiPmTg16RbhZWAqwLBy5",
+	"3WrFJ7ztbogyGnTHbHJFl2",
+	"4E2rKHVDssGJm2SCDOMMJB",
+	"1HY2Jd0NmPuamShAr6KMms",
+	"163tK9Wjr9P9DmM0AVK7lm",
+	"2FXC3k01G6Gw61bmprjgqS",
+	"1dfeR4HaWDbWqFHLkxsg1d",
+	"7GlBOeep6PqTfFi59PTUUN",
+	"4Ge8xMJNwt6EEXOzVXju9a",
+	"6ogn9necmbUdCppmNnGOdi",
 ];
 const sampleTrackIds = [
-	"32A1xdQk9lRSFn5CEY5M2S",
-	"1i6N76fftMZhijOzFQ5ZtL",
-	"07oO1U722crtVcavi6frX6",
-	"5TRPicyLGbAF2LGBFbHGvO",
-	"2HHtWyy5CgaQbC7XSoOb0e",
-	"5JVbvCHX10U2pLa5DEqGav",
-	"6NdoWfQdyDIgMX6D2ugS9T",
-	"62yJjFtgkhUrXktIoSjgP2",
-	"2oBOaqeWSenwf7M6bJyR1A",
-	"4xigPf2sigSPmuFH3qCelB",
+	"1RGidCmtrqER8GBs8TnG9C",
+	"3LPLRNr58Z9Pn0clnEtkXb",
+	"3QQvSQKV8YmQxGolwwWe59",
+	"6nCDnzErqalOaIY3EJM8NK",
+	"2LHNTC9QZxsL3nWpt8iaSR",
+	"1qKCO2Tocwg8CbepJ9uDtd",
+	"2grSOc6HNTXQQXNoRKt9UM",
+	"4U45aEWtQhrm8A5mxPaFZ7",
+	"1eGgMQyOubLxfZjbROuAR4",
+	"5xHgo5JN0wfsV41HnRaos5",
 ];
 const sampleSavedTrackIds = [
-	"0MWUDWyvXuwJzA4yR1dmZJ",
-	"7dSCxR4LqkmxoBrq9MzVSD",
-	"2oBOaqeWSenwf7M6bJyR1A",
-	"71Xtu0sdK3X4EyUKiPjylF",
-	"7MXlyK9MD4A3ZhDoaqA7C7",
-	"3MjUtNVVq3C8Fn0MP3zhXa",
-	"1z3ugFmUKoCzGsI6jdY4Ci",
-	"4ylWMuGbMXNDgDd8lErEle",
-	"0B9x2BRHqj3Qer7biM3pU3",
-	"7wCmS9TTVUcIhRalDYFgPy",
+	"2jNyiavSywmA472t2m6ZBz",
+	"74hD8ZuQLIZyCr597HHAqJ",
+	"480rD34KfGbMaT0L6zjeIu",
+	"1SdQjKRW52cHg2SEesQLvH",
+	"2UcHKgT00bLP7Cjkni3Itg",
+	"2GmkHeyjEPiFvpDXvPNKz4",
+	"2rvd6akG8qEtBNUvQpN7iY",
+	"5IoPnNiYAOvHHJpz13wzRL",
+	"0Tqn5Th0wk55eLdga96vZM",
+	"5R8dQOPq8haW94K7mgERlO",
 ];
 const sampleFollowedIds = [
+	"4nMJn2aEg3mpEwu628igXN",
+	"6ogn9necmbUdCppmNnGOdi",
+	"5aFcMsQsWLZGtGzvKFH8rF",
+	"163tK9Wjr9P9DmM0AVK7lm",
+	"0xGUDWjjHnCpSb1VziwRPy",
+	"5T2Coe8lhc6gbkB4Sxd0jK",
+	"60ae7SALlruTtEbp0JJuRg",
+	"5gewx7W06vXxgSpmOWiPqm",
+	"43R8Umt7qVmJCcOZGWJy24",
 	"0tIqhSs5ERm2J1cOcbxTq5",
-	"0ONHkAv9pCAFxb0zJwDNTy",
-	"5K4W6rqBFWDnAN6FQUkS6x",
-	"0YC192cP3KPCRWx8zr8MfZ",
-	"6zFYqv1mOsgBRQbae3JJ9e",
-	"1Xyo4u8uXC1ZmMpatF05PJ",
 ];
 
 const names = [
@@ -192,7 +198,7 @@ const seed = async () => {
 	const users = [];
 	let i = 0,
 		count = 0;
-	while (count < 5 && i < names.length) {
+	while (count < 10 && i < names.length) {
 		const candidate = generateRandomUser(i);
 		if (!EXCLUDE_EMAILS.has(candidate.email.toLowerCase())) {
 			users.push(candidate);
