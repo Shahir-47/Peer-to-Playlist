@@ -321,7 +321,7 @@ const MessageInput = ({ match }) => {
 				<button
 					type="button"
 					onClick={toggleRecording}
-					className="absolute left-19 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-pink-500 focus:outline-none"
+					className="cursor-pointer absolute left-19 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-pink-500 focus:outline-none"
 				>
 					{recording ? <StopCircle size={20} /> : <Mic size={20} />}
 				</button>
