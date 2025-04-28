@@ -198,7 +198,7 @@ const seed = async () => {
 	const users = [];
 	let i = 0,
 		count = 0;
-	while (count < 10 && i < names.length) {
+	while (count < 5 && i < names.length) {
 		const candidate = generateRandomUser(i);
 		if (!EXCLUDE_EMAILS.has(candidate.email.toLowerCase())) {
 			users.push(candidate);
