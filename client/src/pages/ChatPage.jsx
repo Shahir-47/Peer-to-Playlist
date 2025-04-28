@@ -221,13 +221,13 @@ const ChatPage = () => {
 															.replace(
 																/(https?:\/\/[^\s]+)/g,
 																(url) =>
-																	`<a href="${url}" target="_blank" rel="noopener noreferrer" class="underline text-gray-100">${url}</a>`
+																	`<a href="${url}" target="_blank" rel="noopener noreferrer" class="underline text-blue-500">${url}</a>`
 															)
 															// Emails
 															.replace(
 																/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
 																(email) =>
-																	`<a href="mailto:${email}" class="underline text-gray-100">${email}</a>`
+																	`<a href="mailto:${email}" class="underline text-blue-600">${email}</a>`
 															)
 															// Location phrases like "Location: XYZ"
 															.replace(
@@ -235,7 +235,7 @@ const ChatPage = () => {
 																(_, location) =>
 																	`Location: <a href="https://www.google.com/maps/search/${encodeURIComponent(
 																		location
-																	)}" target="_blank" class="underline text-gray-100">${location}</a>`
+																	)}" target="_blank" class="underline text-blue-600">${location}</a>`
 															)
 															// Dates (MM/DD/YYYY, MM/DD/YY, or MM-DD-YYYY)
 															.replace(
@@ -250,7 +250,7 @@ const ChatPage = () => {
 																		/-/g,
 																		""
 																	)}/${startDate.replace(/-/g, "")}`;
-																	return `<a href="${calendarUrl}" target="_blank" class="underline text-gray-100">${m}/${d}/${y}</a>`;
+																	return `<a href="${calendarUrl}" target="_blank" class="underline text-blue-600">${m}/${d}/${y}</a>`;
 																}
 															),
 													}}
