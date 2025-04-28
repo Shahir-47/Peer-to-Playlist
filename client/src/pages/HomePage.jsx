@@ -81,7 +81,8 @@ const NoMoreProfiles = () => (
 			Woah there, speedy fingers!
 		</h2>
 		<p className="text-xl text-gray-600 mb-6">
-			Bro are you OK? Maybe it&apos;s time to touch some grass.
+			Looks like you've swiped through all the profiles. Don't worry, more are
+			coming soon!
 		</p>
 	</div>
 );
