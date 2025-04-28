@@ -12,6 +12,8 @@ const SignUpForm = () => {
 	const [password, setPassword] = useState("");
 	const [age, setAge] = useState("");
 	const [ageValid, setAgeValid] = useState(true);
+	const [image, setImage] = useState(null);
+	const fileInputRef = useRef(null);
 
 	const [passwordFeedback, setPasswordFeedback] = useState([]);
 	const [showPassword, setShowPassword] = useState(false);
@@ -46,6 +48,14 @@ const SignUpForm = () => {
 			"SpotifyLogin",
 			"width=500,height=600"
 		);
+	};
+
+	const handleImageChange = (e) => {
+		const file = e.target.files[0];
+		if (!file) return;
+		const reader = new FileReader();
+		reader.onloadend = () => setImage(reader.result);
+		reader.readAsDataURL(file);
 	};
 
 	useEffect(() => {
@@ -90,6 +100,7 @@ const SignUpForm = () => {
 					password,
 					age,
 					spotify: spotifyTokens,
+					image,
 				}); // Call the signup function from the auth store with the form data
 				// The signup function will handle the API call and update the loading state
 			}}
@@ -258,6 +269,38 @@ const SignUpForm = () => {
 					</p>
 				</div>
 			)}
+
+			{/* PROFILE PICTURE */}
+			<div>
+				<label className="block text-sm font-medium text-gray-700">
+					Profile Picture
+				</label>
+				<div className="mt-1 flex items-center">
+					<button
+						type="button"
+						onClick={() => fileInputRef.current.click()}
+						className="px-4 py-2 border rounded-md text-sm bg-white hover:bg-pink-50"
+					>
+						Upload Image
+					</button>
+					<input
+						ref={fileInputRef}
+						type="file"
+						accept="image/*"
+						className="hidden"
+						onChange={handleImageChange}
+					/>
+				</div>
+				{image && (
+					<div className="mt-2">
+						<img
+							src={image}
+							alt="Preview"
+							className="w-24 h-24 object-cover rounded-md border"
+						/>
+					</div>
+				)}
+			</div>
 
 			{/* SIGN UP BUTTON */}
 			<div>
